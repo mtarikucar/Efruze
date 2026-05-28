@@ -8,6 +8,8 @@ import { Prisma } from "@prisma/client";
 import { signIn, signOut } from "@/auth";
 import { prisma } from "@/server/db/client";
 import { EmailService } from "@/server/services/email.service";
+import { rateLimit, MINUTE } from "@/lib/rate-limit";
+import { getClientIp } from "@/lib/request-ip";
 
 const signInSchema = z.object({
   email: z.string().email("Geçerli bir e-posta girin"),
@@ -33,6 +35,13 @@ export async function signInAction(raw: {
   if (!parsed.success) {
     const first = parsed.error.issues[0];
     return { ok: false, error: first.message, field: first.path[0] as string };
+  }
+
+  // Brute-force guard: 5 attempts/minute keyed by IP + email.
+  const ip = await getClientIp();
+  const rl = rateLimit(`signin:${ip}:${parsed.data.email}`, 5, MINUTE);
+  if (!rl.ok) {
+    return { ok: false, error: "TOO_MANY_ATTEMPTS" };
   }
 
   try {
@@ -64,6 +73,13 @@ export async function signUpAction(raw: {
   if (!parsed.success) {
     const first = parsed.error.issues[0];
     return { ok: false, error: first.message, field: first.path[0] as string };
+  }
+
+  // Abuse guard: 5 sign-ups/minute per IP (stops scripted account creation).
+  const ip = await getClientIp();
+  const rl = rateLimit(`signup:${ip}`, 5, MINUTE);
+  if (!rl.ok) {
+    return { ok: false, error: "TOO_MANY_ATTEMPTS" };
   }
 
   // Early existence check gives a fast, friendly response in the common case.

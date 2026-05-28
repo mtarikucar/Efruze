@@ -13,6 +13,7 @@ import { CouponService } from "@/server/services/coupon.service";
 import { checkoutInput, type CheckoutInput } from "@/server/types/order";
 import { prisma } from "@/server/db/client";
 import { auth } from "@/auth";
+import { rateLimit, MINUTE, HOUR } from "@/lib/rate-limit";
 import type { AppLocale } from "@/i18n/routing";
 
 async function getClientIp(): Promise<string | undefined> {
@@ -34,6 +35,12 @@ export async function placeOrderAction(raw: unknown): Promise<ActionResult> {
   }
   const input: CheckoutInput = parsed.data;
   const locale = (await getLocale()) as AppLocale;
+
+  // Order-spam guard: 10 order attempts/minute per IP.
+  const rlIp = (await getClientIp()) ?? "unknown";
+  const rl = rateLimit(`placeorder:${rlIp}`, 10, MINUTE);
+  if (!rl.ok) return { ok: false, error: "TOO_MANY_REQUESTS" };
+
   const cookieStore = await cookies();
   const cartToken = cookieStore.get(CART_COOKIE)?.value;
   if (!cartToken) return { ok: false, error: "CART_EMPTY" };
@@ -157,6 +164,14 @@ export async function contactInquiryAction(
   if (!parsed.success) {
     return { ok: false, error: "INVALID_INPUT" };
   }
+
+  // Spam guard: 5 inquiries/hour per IP.
+  const rlIp = (await getClientIp()) ?? "unknown";
+  const rl = rateLimit(`contact:${rlIp}`, 5, HOUR);
+  if (!rl.ok) {
+    return { ok: false, error: "TOO_MANY_REQUESTS" };
+  }
+
   try {
     // Persist nothing for v1 — log + send to atelier. M4 admin will see a queue.
     console.log("[contact]", parsed.data);

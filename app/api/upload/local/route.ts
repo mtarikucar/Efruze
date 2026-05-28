@@ -3,6 +3,7 @@ import { randomUUID } from "crypto";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { auth } from "@/auth";
+import { rateLimit, MINUTE } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -48,6 +49,12 @@ export async function POST(req: Request) {
   if (!session?.user) return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
   if (session.user.role !== "ADMIN" && session.user.role !== "SUPER_ADMIN") {
     return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
+  }
+
+  // DoS guard: 60 uploads/minute per admin.
+  const rl = rateLimit(`upload:${session.user.id}`, 60, MINUTE);
+  if (!rl.ok) {
+    return NextResponse.json({ error: "TOO_MANY_REQUESTS" }, { status: 429 });
   }
 
   let formData;
