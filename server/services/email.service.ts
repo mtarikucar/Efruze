@@ -7,6 +7,7 @@ import { AdminNewOrderEmail } from "@/emails/AdminNewOrderEmail";
 import { WelcomeEmail } from "@/emails/WelcomeEmail";
 import { OrderConfirmedEmail } from "@/emails/OrderConfirmedEmail";
 import { OrderShippedEmail } from "@/emails/OrderShippedEmail";
+import { OrderRefundedEmail } from "@/emails/OrderRefundedEmail";
 import { PasswordResetEmail } from "@/emails/PasswordResetEmail";
 import type { OrderDTO, BankTransferInstructionsDTO } from "@/server/types/order";
 
@@ -154,6 +155,16 @@ export const EmailService = {
       subject: `efruze · siparişiniz yola çıktı / shipped · #${args.order.orderNumber}`,
       html,
       tag: "order-shipped",
+    });
+  },
+
+  async orderRefunded(order: OrderDTO) {
+    const html = await render(OrderRefundedEmail({ order }));
+    return sendOrLog({
+      to: order.email,
+      subject: `efruze · siparişiniz iade edildi / refunded · #${order.orderNumber}`,
+      html,
+      tag: "order-refunded",
     });
   },
 };

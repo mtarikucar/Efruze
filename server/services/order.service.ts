@@ -1,6 +1,6 @@
 import Decimal from "decimal.js";
 import { randomBytes } from "crypto";
-import { Prisma } from "@prisma/client";
+import { OrderStatus, Prisma, type PaymentMethod, type PaymentStatus } from "@prisma/client";
 import { prisma } from "@/server/db/client";
 import { findOrderByNumber, findOrderByNumberAndEmail, type OrderRow } from "@/server/db/orders";
 import { PaymentService } from "./payment.service";
@@ -18,6 +18,18 @@ function generateOrderNumber(): string {
   for (let i = 0; i < 6; i++) suffix += ORDER_BASE32[bytes[i] % ORDER_BASE32.length];
   return `EFR-${year}-${suffix}`;
 }
+
+export type AdminOrderListItem = {
+  id: string;
+  orderNumber: string;
+  email: string;
+  status: OrderStatus;
+  paymentMethod: PaymentMethod | null;
+  paymentStatus: PaymentStatus | null;
+  total: number;
+  itemCount: number;
+  placedAt: string;
+};
 
 function pickName<T extends { locale: string; name: string }>(rows: T[], locale: AppLocale): string {
   return (
@@ -306,6 +318,123 @@ export const OrderService = {
 
       // Stock restoration on cancel — only once per order.
       if (args.next === "CANCELLED" && !current.stockRestored) {
+        for (const item of current.items) {
+          await tx.productVariant.update({
+            where: { id: item.variantId },
+            data: { stock: { increment: item.quantity } },
+          });
+        }
+        await tx.order.update({
+          where: { id: args.orderId },
+          data: { stockRestored: true },
+        });
+      }
+    });
+
+    const row = await prisma.order.findUnique({
+      where: { id: args.orderId },
+      include: { items: true, payment: true, shippingAddress: true, billingAddress: true },
+    });
+    return row ? toOrderDTO(row, args.locale) : null;
+  },
+
+  /**
+   * Admin order listing with optional status filter, free-text search, and
+   * pagination. `q` matches on orderNumber OR email (contains, case-insensitive).
+   * Returns the page slice plus the total matching count so the UI can render
+   * previous/next controls. Replaces the old hard-coded `take: 200` list.
+   */
+  async listForAdmin(args: {
+    status?: string;
+    q?: string;
+    page?: number;
+    perPage?: number;
+  }): Promise<{ items: AdminOrderListItem[]; total: number; page: number; perPage: number }> {
+    const perPage = args.perPage && args.perPage > 0 ? args.perPage : 30;
+    const page = args.page && args.page > 0 ? args.page : 1;
+
+    const where: Prisma.OrderWhereInput = {};
+    if (args.status && args.status in OrderStatus) {
+      where.status = args.status as OrderStatus;
+    }
+    const q = args.q?.trim();
+    if (q) {
+      where.OR = [
+        { orderNumber: { contains: q, mode: "insensitive" } },
+        { email: { contains: q, mode: "insensitive" } },
+      ];
+    }
+
+    const [total, rows] = await prisma.$transaction([
+      prisma.order.count({ where }),
+      prisma.order.findMany({
+        where,
+        orderBy: { placedAt: "desc" },
+        include: {
+          items: { select: { quantity: true } },
+          payment: { select: { method: true, status: true } },
+        },
+        skip: (page - 1) * perPage,
+        take: perPage,
+      }),
+    ]);
+
+    const items: AdminOrderListItem[] = rows.map((o) => ({
+      id: o.id,
+      orderNumber: o.orderNumber,
+      email: o.email,
+      status: o.status,
+      paymentMethod: o.payment?.method ?? null,
+      paymentStatus: o.payment?.status ?? null,
+      total: Number(o.total),
+      itemCount: o.items.reduce((acc, i) => acc + i.quantity, 0),
+      placedAt: o.placedAt.toLocaleDateString("en-GB"),
+    }));
+
+    return { items, total, page, perPage };
+  },
+
+  /**
+   * Refund an order — admin action. Transactional: flips Payment to REFUNDED,
+   * Order to REFUNDED, and restores variant stock (gated by stockRestored so a
+   * refund after a cancel — or a retried refund — never double-increments).
+   * Idempotent: a no-op if the order is already REFUNDED.
+   *
+   * NOTE: the actual money movement (PayTR / bank reversal) is performed
+   * manually via the provider's own panel — this record exists for accounting
+   * and customer-facing status only. PayTR programmatic refunds are stubbed
+   * (paytr.provider.ts refund() returns a not-implemented result).
+   */
+  async refundOrder(args: {
+    orderId: string;
+    adminId: string;
+    locale: AppLocale;
+  }): Promise<OrderDTO | null> {
+    await prisma.$transaction(async (tx) => {
+      const current = await tx.order.findUniqueOrThrow({
+        where: { id: args.orderId },
+        include: {
+          payment: true,
+          items: { select: { variantId: true, quantity: true } },
+        },
+      });
+
+      if (current.status === "REFUNDED") return; // idempotent
+
+      if (current.payment) {
+        await tx.payment.update({
+          where: { id: current.payment.id },
+          data: { status: "REFUNDED" },
+        });
+      }
+
+      await tx.order.update({
+        where: { id: args.orderId },
+        data: { status: "REFUNDED" },
+      });
+
+      // Restore stock once — guard against a prior cancel having already done it.
+      if (!current.stockRestored) {
         for (const item of current.items) {
           await tx.productVariant.update({
             where: { id: item.variantId },

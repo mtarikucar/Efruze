@@ -26,6 +26,11 @@ const NAV: ReadonlyArray<readonly [string, string]> = [
   ["/admin/settings", "Ayarlar"],
 ];
 
+// Links only visible to SUPER_ADMIN — appended to NAV when the role allows.
+const SUPER_ADMIN_NAV: ReadonlyArray<readonly [string, string]> = [
+  ["/admin/users", "Yöneticiler"],
+];
+
 export function AdminSidebar({
   userLabel,
   role,
@@ -35,6 +40,9 @@ export function AdminSidebar({
 }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+
+  const nav =
+    role === "SUPER_ADMIN" ? [...NAV, ...SUPER_ADMIN_NAV] : NAV;
 
   // Collapse the mobile menu whenever the route changes (tapped a nav link).
   useEffect(() => {
@@ -77,7 +85,7 @@ export function AdminSidebar({
         </div>
 
         <nav className="flex flex-col gap-1 lg:mt-10">
-          {NAV.map(([href, label]) => (
+          {nav.map(([href, label]) => (
             <AdminNavLink key={href} href={href}>
               {label}
             </AdminNavLink>

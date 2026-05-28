@@ -6,6 +6,7 @@ import { AdminButton, FormField, adminInputCls, adminTextareaCls } from "./primi
 import {
   confirmBankTransferAction,
   transitionOrderStatusAction,
+  refundOrderAction,
   setAdminNoteAction,
 } from "@/app/admin/orders/actions";
 import type { OrderStatus, PaymentMethod, PaymentStatus } from "@prisma/client";
@@ -51,6 +52,8 @@ export function OrderActionPanel({
   const canShip = status === "PAID" || status === "PROCESSING";
   const canDeliver = status === "SHIPPED";
   const canCancel = !["DELIVERED", "CANCELLED", "REFUNDED"].includes(status);
+  const canRefund = ["PAID", "PROCESSING", "SHIPPED", "DELIVERED"].includes(status);
+  const isRefunded = status === "REFUNDED";
 
   return (
     <section className="rounded-sm card-elev p-6">
@@ -101,7 +104,29 @@ export function OrderActionPanel({
             Siparişi iptal et
           </AdminButton>
         )}
+
+        {canRefund && (
+          <AdminButton
+            type="button"
+            variant="danger"
+            disabled={pending}
+            onClick={() =>
+              confirm(
+                "Bu sipariş iade edilsin mi? Stok geri eklenir ve sipariş 'İade edildi' olarak işaretlenir. Gerçek para iadesini ödeme sağlayıcısı panelinden ayrıca yapın.",
+              ) && go(() => refundOrderAction({ orderId }))
+            }
+          >
+            İade et
+          </AdminButton>
+        )}
       </div>
+
+      {isRefunded && (
+        <div className="mt-4 rounded-sm border border-red-700/30 bg-red-700/5 p-3 font-serif text-base text-red-900">
+          Bu sipariş iade edildi. Gerçek para iadesi ödeme sağlayıcısı / banka
+          paneli üzerinden manuel olarak yapılır; bu kayıt muhasebe içindir.
+        </div>
+      )}
 
       {canShip && (
         <div className="mt-6 border-t border-line pt-6">

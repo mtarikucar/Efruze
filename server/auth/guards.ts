@@ -31,6 +31,26 @@ export async function requireAdmin(returnTo?: string): Promise<Session> {
   return session;
 }
 
+/**
+ * Same as requireAdmin but additionally enforces the SUPER_ADMIN role.
+ * Redirects anonymous users to /sign-in, authenticated non-admins to /account,
+ * and plain ADMINs to /admin (they may not manage other admins).
+ */
+export async function requireSuperAdmin(returnTo?: string): Promise<Session> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    const next = returnTo ? `?callbackUrl=${encodeURIComponent(returnTo)}` : "";
+    redirect(`/sign-in${next}`);
+  }
+  if (session.user.role !== "ADMIN" && session.user.role !== "SUPER_ADMIN") {
+    redirect("/account");
+  }
+  if (session.user.role !== "SUPER_ADMIN") {
+    redirect("/admin");
+  }
+  return session;
+}
+
 /** Returns the session (or null) without redirecting. */
 export async function getSession() {
   return auth();

@@ -72,6 +72,28 @@ export async function transitionOrderStatusAction(raw: unknown) {
   return { ok: true } as const;
 }
 
+export async function refundOrderAction(raw: unknown) {
+  const session = await requireAdmin();
+  const parsed = idSchema.safeParse(raw);
+  if (!parsed.success) return { ok: false, error: "INVALID_INPUT" } as const;
+  try {
+    const locale = (await getLocale()) as AppLocale;
+    const dto = await OrderService.refundOrder({
+      orderId: parsed.data.orderId,
+      adminId: session.user.id,
+      locale,
+    });
+    if (dto) {
+      await EmailService.orderRefunded(dto).catch(() => undefined);
+    }
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "FAILED" } as const;
+  }
+  revalidatePath("/admin/orders");
+  revalidatePath("/admin");
+  return { ok: true } as const;
+}
+
 export async function setAdminNoteAction(raw: unknown) {
   await requireAdmin();
   const parsed = noteSchema.safeParse(raw);
