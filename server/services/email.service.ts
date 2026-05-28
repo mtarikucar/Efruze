@@ -7,6 +7,7 @@ import { AdminNewOrderEmail } from "@/emails/AdminNewOrderEmail";
 import { WelcomeEmail } from "@/emails/WelcomeEmail";
 import { OrderConfirmedEmail } from "@/emails/OrderConfirmedEmail";
 import { OrderShippedEmail } from "@/emails/OrderShippedEmail";
+import { PasswordResetEmail } from "@/emails/PasswordResetEmail";
 import type { OrderDTO, BankTransferInstructionsDTO } from "@/server/types/order";
 
 const FROM = "efruze atelier <atelier@efruze.com>";
@@ -85,6 +86,16 @@ export const EmailService = {
       subject: "efruze · hoş geldiniz / welcome",
       html,
       tag: "welcome",
+    });
+  },
+
+  async passwordReset(args: { to: string; resetUrl: string }) {
+    const html = await render(PasswordResetEmail({ resetUrl: args.resetUrl }));
+    return sendOrLog({
+      to: args.to,
+      subject: "efruze · şifre sıfırlama / password reset",
+      html,
+      tag: "password-reset",
     });
   },
 

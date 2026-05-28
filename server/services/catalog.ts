@@ -104,6 +104,21 @@ export async function safeGetBySlug(slug: string, locale: AppLocale): Promise<Pr
   }
 }
 
+export async function safeGetRelated(
+  productId: string,
+  categorySlug: string,
+  locale: AppLocale,
+  take = 4,
+): Promise<ProductDTO[]> {
+  // Related products are a nice-to-have garnish on the PDP — a DB hiccup must
+  // never 500 the page. Degrade to an empty list and the caller hides the block.
+  try {
+    return await ProductService.getRelated(productId, categorySlug, locale, take);
+  } catch {
+    return [];
+  }
+}
+
 /* ---- Events ---------------------------------------------------------- */
 
 export async function safeListUpcomingEvents(locale: AppLocale, take?: number): Promise<EventDTO[]> {

@@ -4,10 +4,10 @@ import { SignInForm } from "@/components/storefront/AuthForms";
 
 export const metadata: Metadata = { title: "Sign in · efruze" };
 
-type SearchParams = Promise<{ callbackUrl?: string }>;
+type SearchParams = Promise<{ callbackUrl?: string; reset?: string }>;
 
 export default async function SignInPage({ searchParams }: { searchParams: SearchParams }) {
-  const { callbackUrl } = await searchParams;
+  const { callbackUrl, reset } = await searchParams;
   const t = await getTranslations("auth");
   const hasGoogle = Boolean(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET);
 
@@ -28,6 +28,12 @@ export default async function SignInPage({ searchParams }: { searchParams: Searc
           <em className="italic text-blue-deep">{t("signInTitleEm")}</em>
         </h1>
       </header>
+
+      {reset && (
+        <p className="mb-6 w-full rounded-sm border border-blue-deep/30 bg-blue-deep/5 p-4 text-center font-serif text-base italic text-blue-deep">
+          {t("resetSuccess")}
+        </p>
+      )}
 
       <div className="w-full rounded-sm card-elev p-8 sm:p-10">
         <SignInForm callbackUrl={callbackUrl} hasGoogle={hasGoogle} />

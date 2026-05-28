@@ -68,3 +68,21 @@ export async function findFeaturedProducts(take = 6): Promise<ProductRow[]> {
     select: productSelect,
   });
 }
+
+export async function findRelatedProducts(args: {
+  productId: string;
+  categorySlug: string;
+  take?: number;
+}): Promise<ProductRow[]> {
+  // Same category (matched by its stable slug), current product excluded.
+  return prisma.product.findMany({
+    where: {
+      isPublished: true,
+      category: { slug: args.categorySlug },
+      id: { not: args.productId },
+    },
+    orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+    take: args.take ?? 4,
+    select: productSelect,
+  });
+}

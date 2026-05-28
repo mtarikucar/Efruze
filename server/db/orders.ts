@@ -16,3 +16,23 @@ export async function findOrderByNumber(orderNumber: string): Promise<OrderRow |
     include: orderInclude,
   });
 }
+
+/**
+ * Guest lookup: orderNumber AND email must both match. Email compared
+ * case-insensitively so "Ali@X.com" matches a stored "ali@x.com". Returns
+ * null when either field is off — the caller surfaces a single generic
+ * "not found / email mismatch" message so this can't be used to probe which
+ * order numbers exist.
+ */
+export async function findOrderByNumberAndEmail(
+  orderNumber: string,
+  email: string,
+): Promise<OrderRow | null> {
+  return prisma.order.findFirst({
+    where: {
+      orderNumber,
+      email: { equals: email, mode: "insensitive" },
+    },
+    include: orderInclude,
+  });
+}

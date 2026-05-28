@@ -2,7 +2,7 @@ import Decimal from "decimal.js";
 import { randomBytes } from "crypto";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/server/db/client";
-import { findOrderByNumber, type OrderRow } from "@/server/db/orders";
+import { findOrderByNumber, findOrderByNumberAndEmail, type OrderRow } from "@/server/db/orders";
 import { PaymentService } from "./payment.service";
 import { CouponService } from "./coupon.service";
 import type { AddressInput, CheckoutInput, OrderDTO, OrderLineDTO } from "@/server/types/order";
@@ -341,31 +341,54 @@ export const OrderService = {
   ): Promise<OrderDTO | null> {
     const row = await findOrderByNumber(orderNumber);
     if (!row) return null;
+    return withBankInstructions(toOrderDTO(row, locale), row);
+  },
 
-    const dto = toOrderDTO(row, locale);
-
-    if (row.payment?.method === "BANK_TRANSFER" && row.payment.reference) {
-      const accounts = await prisma.bankAccount.findMany({
-        where: { isActive: true },
-        orderBy: { sortOrder: "asc" },
-      });
-      dto.bankInstructions = {
-        reference: row.payment.reference,
-        amount: row.total.toString(),
-        currency: row.currency,
-        deadlineHours: 72,
-        accounts: accounts.map((a) => ({
-          bankName: a.bankName,
-          accountHolder: a.accountHolder,
-          iban: a.iban,
-          swift: a.swift,
-        })),
-      };
-    }
-
-    return dto;
+  /**
+   * Guest order lookup by orderNumber + email. BOTH must match (email
+   * case-insensitive) — knowing an order number alone is never enough, since
+   * the order exposes PII (name, address, phone, basket). Returns null on any
+   * mismatch so the caller can show one generic message and an attacker can't
+   * tell a wrong email from a non-existent order number. Bank-transfer orders
+   * get their instructions populated, matching the success page.
+   */
+  async lookupForGuest(
+    orderNumber: string,
+    email: string,
+    locale: AppLocale,
+  ): Promise<OrderDTO | null> {
+    const row = await findOrderByNumberAndEmail(orderNumber, email);
+    if (!row) return null;
+    return withBankInstructions(toOrderDTO(row, locale), row);
   },
 };
+
+/**
+ * Populate a DTO's bankInstructions from active BankAccount rows when the
+ * order paid (or will pay) by bank transfer. Shared by the success page and
+ * the guest lookup so both render the same panel.
+ */
+async function withBankInstructions(dto: OrderDTO, row: OrderRow): Promise<OrderDTO> {
+  if (row.payment?.method === "BANK_TRANSFER" && row.payment.reference) {
+    const accounts = await prisma.bankAccount.findMany({
+      where: { isActive: true },
+      orderBy: { sortOrder: "asc" },
+    });
+    dto.bankInstructions = {
+      reference: row.payment.reference,
+      amount: row.total.toString(),
+      currency: row.currency,
+      deadlineHours: 72,
+      accounts: accounts.map((a) => ({
+        bankName: a.bankName,
+        accountHolder: a.accountHolder,
+        iban: a.iban,
+        swift: a.swift,
+      })),
+    };
+  }
+  return dto;
+}
 
 function toAddressData(a: AddressInput) {
   return {

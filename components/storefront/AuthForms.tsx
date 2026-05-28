@@ -62,6 +62,15 @@ export function SignInForm({
         />
       </Field>
 
+      <div className="-mt-2 text-right">
+        <Link
+          href="/forgot-password"
+          className="font-caps text-[10px] uppercase tracking-[0.22em] text-ink-mute underline-offset-4 hover:text-ink hover:underline"
+        >
+          {t("forgotPassword")}
+        </Link>
+      </div>
+
       {error && (
         <p className="rounded-sm border border-red-700/20 bg-red-700/5 p-3 font-serif text-base italic text-red-900">
           {errorLabel(error, t)}

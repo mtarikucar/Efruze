@@ -3,6 +3,7 @@ import {
   findManyProducts,
   countProducts,
   findProductBySlug,
+  findRelatedProducts,
   type ProductRow,
 } from "@/server/db/products";
 import type { ProductDTO, ProductDetailDTO, ProductListParams, VariantDTO } from "@/server/types/product";
@@ -154,5 +155,20 @@ export const ProductService = {
     const row = await findProductBySlug(slug);
     if (!row) return null;
     return toProductDetailDTO(row, locale);
+  },
+
+  /**
+   * Products from the same category as `productId`, excluding it. Published
+   * only, ordered by the editorial sortOrder. Used by the "Atölyeden seçmeler"
+   * block on the product detail page.
+   */
+  async getRelated(
+    productId: string,
+    categorySlug: string,
+    locale: AppLocale,
+    take = 4,
+  ): Promise<ProductDTO[]> {
+    const rows = await findRelatedProducts({ productId, categorySlug, take });
+    return rows.map((r) => toProductDTO(r, locale));
   },
 };

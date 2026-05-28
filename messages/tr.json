@@ -208,6 +208,7 @@
     "service_care": "Bakım rehberi",
     "service_bespoke": "Özel sipariş",
     "service_contact": "İletişim",
+    "service_lookup": "Sipariş sorgula",
     "service_faq": "SSS",
     "copyright": "© MMXXVI efruze maison — tüm parçalar imzalıdır ve tekrar edilemez."
   },
@@ -235,9 +236,28 @@
     "signInHere": "Buradan giriş yapın",
     "createAccount": "Hesap oluştur",
     "newsletterOptIn": "Atölyeden ayda bir mektup almak isterim",
+    "forgotPassword": "Şifremi unuttum",
+    "forgotEyebrow": "Şifre sıfırlama",
+    "forgotTitleA": "Şifrenizi",
+    "forgotTitleEm": "sıfırlayın",
+    "forgotSub": "E-posta adresinizi girin, size bir sıfırlama bağlantısı gönderelim.",
+    "sendResetLink": "Şifre sıfırlama bağlantısı gönder",
+    "forgotSent": "Eğer bu e-posta kayıtlıysa, şifre sıfırlama bağlantısı gönderildi. Gelen kutunuzu kontrol edin.",
+    "backToSignIn": "Girişe dön",
+    "resetEyebrow": "Yeni şifre",
+    "resetTitleA": "Yeni şifre",
+    "resetTitleEm": "belirleyin",
+    "newPassword": "Yeni şifre",
+    "confirmPassword": "Yeni şifre (tekrar)",
+    "updatePassword": "Şifreyi güncelle",
+    "requestNewLink": "Yeni bağlantı iste",
+    "resetSuccess": "Şifreniz güncellendi. Yeni şifrenizle giriş yapabilirsiniz.",
     "errors": {
       "invalidCredentials": "E-posta veya şifre hatalı.",
-      "emailTaken": "Bu e-posta zaten kayıtlı. Giriş yapmayı denediniz mi?"
+      "emailTaken": "Bu e-posta zaten kayıtlı. Giriş yapmayı denediniz mi?",
+      "tooManyAttempts": "Çok fazla deneme yapıldı. Lütfen bir süre sonra tekrar deneyin.",
+      "invalidToken": "Bu bağlantı geçersiz veya süresi dolmuş. Lütfen yeni bir bağlantı isteyin.",
+      "passwordMismatch": "Şifreler eşleşmiyor."
     }
   },
   "account": {
@@ -245,6 +265,7 @@
     "overview": "Özet",
     "orders": "Siparişler",
     "addresses": "Adresler",
+    "profile": "Profil",
     "signOut": "Çıkış yap",
     "overviewTitle": "Atölyeye hoş geldiniz",
     "overviewSub": "Siparişlerinizi takip edin, adreslerinizi yönetin.",
@@ -279,6 +300,56 @@
     "shipping": "Kargo",
     "discount": "İndirim",
     "total": "Toplam",
-    "shippingTo": "Teslimat adresi"
+    "shippingTo": "Teslimat adresi",
+    "profileTitle": "Profil",
+    "profileSub": "Hesap bilgilerinizi güncelleyin, şifrenizi değiştirin.",
+    "profileDetails": "Hesap bilgileri",
+    "profileSaved": "Bilgileriniz güncellendi.",
+    "changePassword": "Şifre değiştir",
+    "currentPassword": "Mevcut şifre",
+    "newPassword": "Yeni şifre",
+    "confirmPassword": "Yeni şifre (tekrar)",
+    "updatePassword": "Şifreyi güncelle",
+    "passwordSaved": "Şifreniz güncellendi.",
+    "noPasswordHint": "Hesabınız Google ile oluşturulmuş. Şifre belirlemek için \"Şifremi unuttum\" akışını kullanabilirsiniz.",
+    "deleteTitle": "Hesabımı sil",
+    "deleteSub": "Hesabınızı silmek kişisel verilerinizi anonimleştirir ve bu işlem geri alınamaz. Sipariş geçmişiniz yasal yükümlülükler için saklanabilir.",
+    "deleteConfirmLabel": "Onaylamak için \"SİL\" yazın",
+    "deleteConfirmWord": "SİL",
+    "deleteButton": "Hesabımı kalıcı olarak sil",
+    "errors": {
+      "emailTaken": "Bu e-posta zaten kullanımda.",
+      "wrongPassword": "Mevcut şifreniz hatalı.",
+      "noPassword": "Hesabınızda şifre tanımlı değil.",
+      "passwordMismatch": "Şifreler eşleşmiyor.",
+      "unauthorized": "Oturumunuz sona ermiş. Lütfen tekrar giriş yapın."
+    }
+  },
+  "orderLookup": {
+    "eyebrow": "Sipariş",
+    "title": "Siparişinizi",
+    "titleEm": "sorgulayın.",
+    "sub": "Sipariş numaranız ve sipariş sırasında kullandığınız e-posta ile durumunu görüntüleyin.",
+    "orderNumber": "Sipariş numarası",
+    "orderNumberPlaceholder": "EFR-2026-XXXXXX",
+    "email": "E-posta",
+    "emailPlaceholder": "siparişteki e-posta",
+    "submit": "Siparişi göster",
+    "loading": "Aranıyor…",
+    "newLookup": "Başka bir sipariş sorgula",
+    "statusLabel": "Durum",
+    "orderSummary": "Sipariş özeti",
+    "shippingTo": "Teslimat adresi",
+    "subtotal": "Ara toplam",
+    "shipping": "Kargo",
+    "discount": "İndirim",
+    "total": "Toplam",
+    "placedAt": "Sipariş tarihi",
+    "errors": {
+      "NOT_FOUND": "Sipariş bulunamadı veya e-posta eşleşmiyor.",
+      "TOO_MANY_REQUESTS": "Çok fazla deneme yaptınız. Lütfen bir süre sonra tekrar deneyin.",
+      "INVALID_INPUT": "Lütfen sipariş numaranızı ve e-postanızı kontrol edin.",
+      "UNKNOWN": "Bir sorun oluştu. Lütfen tekrar deneyin."
+    }
   }
 }

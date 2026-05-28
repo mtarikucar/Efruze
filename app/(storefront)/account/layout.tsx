@@ -31,6 +31,7 @@ export default async function AccountLayout({ children }: { children: React.Reac
           <NavLink href="/account">{t("overview")}</NavLink>
           <NavLink href="/account/orders">{t("orders")}</NavLink>
           <NavLink href="/account/addresses">{t("addresses")}</NavLink>
+          <NavLink href="/account/profile">{t("profile")}</NavLink>
 
           <form action={signOutAction} className="mt-6">
             <button

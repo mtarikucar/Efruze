@@ -33,6 +33,7 @@ export function Footer() {
         { href: "/faq", label: t("service_shipping") },
         { href: "/faq", label: t("service_care") },
         { href: "/contact", label: t("service_bespoke") },
+        { href: "/orders/lookup", label: t("service_lookup") },
         { href: "/contact", label: t("service_contact") },
         { href: "/faq", label: t("service_faq") },
       ],

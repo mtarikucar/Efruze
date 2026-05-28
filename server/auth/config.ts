@@ -44,7 +44,9 @@ function buildProviders() {
         // attackers can't enumerate emails via response timing.
         const hashToCompare = user?.passwordHash ?? (await DUMMY_HASH_PROMISE);
         const ok = await compare(parsed.data.password, hashToCompare);
-        if (!user || !user.passwordHash || !ok) return null;
+        // Reject missing, password-less (Google-only), or soft-deleted (KVKK)
+        // accounts. The bcrypt compare still ran above to keep timing constant.
+        if (!user || !user.passwordHash || user.deletedAt || !ok) return null;
         return {
           id: user.id,
           email: user.email,

@@ -5,9 +5,10 @@ import { Link } from "@/i18n/navigation";
 import { ProductGallery } from "@/components/storefront/ProductGallery";
 import { AddToBagPanel } from "@/components/storefront/AddToBagPanel";
 import { PriceTag } from "@/components/storefront/PriceTag";
+import { ProductCard } from "@/components/storefront/ProductCard";
 import { ProductJsonLd, BreadcrumbJsonLd } from "@/components/storefront/ProductJsonLd";
 import ModelViewer from "@/components/storefront/ModelViewer";
-import { safeGetBySlug } from "@/server/services/catalog";
+import { safeGetBySlug, safeGetRelated } from "@/server/services/catalog";
 import { formatEditionNumber } from "@/lib/format";
 import type { AppLocale } from "@/i18n/routing";
 
@@ -36,6 +37,7 @@ export default async function ProductDetailPage({ params }: { params: Params }) 
   if (!product) notFound();
 
   const t = await getTranslations("product");
+  const related = await safeGetRelated(product.id, product.category.slug, locale, 4);
 
   return (
     <section
@@ -123,6 +125,19 @@ export default async function ProductDetailPage({ params }: { params: Params }) 
           )}
         </div>
       </div>
+
+      {related.length > 0 && (
+        <section className="mt-24 border-t border-line pt-16 sm:mt-32">
+          <div className="mb-10 font-caps text-[11px] uppercase tracking-[0.32em] text-ink-2">
+            <span className="mr-1.5 text-gold">—</span> {t("related")}
+          </div>
+          <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-3">
+            {related.map((p) => (
+              <ProductCard key={p.id} product={p} variant="standard" />
+            ))}
+          </div>
+        </section>
+      )}
 
       <ProductJsonLd product={product} />
       <BreadcrumbJsonLd
