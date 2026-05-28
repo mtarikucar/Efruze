@@ -1,0 +1,53 @@
+/* efruze design tokens — sourced from the design bundle prototype.
+   Imported by app/globals.css.
+
+   Tailwind v4 `@theme` block exposes color/font tokens to utility classes
+   (text-bg, bg-ink, border-line, font-serif…) AND to :root so plain CSS like
+   `background: var(--color-ink)` keeps working. NOTE: do NOT mirror these
+   into a separate `@theme inline` block in globals.css — that creates a
+   self-reference cycle (`--color-bg: var(--color-bg)`) that CSS resolves to
+   `initial`, killing every text-bg/bg-ink button. */
+
+@theme {
+  /* Surface */
+  --color-bg: #eadec2;
+  --color-bg-deep: #ddcdac;
+  --color-paper: #faf6ee;
+
+  /* Ink */
+  --color-ink: #1a2330;
+  --color-ink-2: #3a4250;
+  --color-ink-mute: #6b6b66;
+  --color-line: #b8a784;
+  --color-line-soft: #d4c8a7;
+
+  /* Firuze (turquoise) */
+  --color-blue: #7a98ab;
+  --color-blue-deep: #3e5d72;
+
+  /* Gold */
+  --color-gold: #b08a4b;
+  --color-gold-soft: #c8a877;
+
+  /* Font families — populated by next/font in app/layout.tsx */
+  --font-serif: var(--font-cormorant), "Times New Roman", serif;
+  --font-caps: var(--font-tenor), "Optima", serif;
+  --font-sans: var(--font-dm-sans), system-ui, sans-serif;
+
+  --container-page: 1320px;
+}
+
+/* Non-utility custom properties live on :root so they're available to plain
+   CSS and inline-style consumers (ParallaxBg mutates --parallax-py/veil). */
+:root {
+  --shadow-card: 0 1px 2px rgba(26, 35, 48, 0.04),
+                 0 4px 14px rgba(26, 35, 48, 0.06);
+  --shadow-card-hover: 0 2px 4px rgba(26, 35, 48, 0.05),
+                       0 8px 22px rgba(26, 35, 48, 0.08);
+
+  --maxw: 1320px;
+  --pad: clamp(20px, 4vw, 56px);
+
+  --parallax-py: 0px;
+  --parallax-veil: 0.85;
+}

@@ -1,0 +1,22 @@
+.git
+.gitignore
+.gitattributes
+.next
+node_modules
+.env
+.env.*
+!.env.example
+*.log
+.tmp-*
+.tmp-og-preview.png
+.claude
+.cursor
+.vscode
+.vercel
+README.md
+DEPLOYMENT_*.md
+docker-compose*.yml
+Dockerfile
+.dockerignore
+# Keep prisma/seed.ts in image (used after seed via exec); skip dev sqlite if any
+prisma/dev.db
