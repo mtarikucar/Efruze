@@ -173,11 +173,22 @@ export async function contactInquiryAction(
   }
 
   try {
-    // Persist nothing for v1 — log + send to atelier. M4 admin will see a queue.
-    console.log("[contact]", parsed.data);
-    void prisma; // suppress unused-import warning until wired to a model
+    // Persist the inquiry so the atelier keeps a durable queue (admin UI lands
+    // in a separate task). Fire the atelier notification email best-effort —
+    // a send failure must never lose the saved message.
+    await prisma.contactMessage.create({
+      data: {
+        name: parsed.data.name,
+        email: parsed.data.email,
+        message: parsed.data.message,
+      },
+    });
+    void EmailService.contactInquiry(parsed.data).catch((err) =>
+      console.error("[contact] notify error", err),
+    );
     return { ok: true };
   } catch (err) {
+    // Fail-soft: never block the visitor on a DB hiccup — log and acknowledge.
     console.error("[contact] error", err);
     return { ok: true };
   }

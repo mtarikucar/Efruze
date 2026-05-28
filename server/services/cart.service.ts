@@ -208,11 +208,25 @@ export const CartService = {
   async updateQty(token: string, itemId: string, quantity: number) {
     const item = await prisma.cartItem.findUnique({
       where: { id: itemId },
-      select: { cart: { select: { token: true } } },
+      select: { variantId: true, cart: { select: { token: true } } },
     });
     if (!item || item.cart.token !== token) {
       throw new Error("Cart item not found");
     }
+
+    // Stock guard — mirror addItem: a manual qty bump must not exceed available
+    // stock. Skip for quantity <= 0 (that path deletes the line in dbUpdateQty).
+    if (quantity > 0) {
+      const variant = await prisma.productVariant.findUnique({
+        where: { id: item.variantId },
+        select: { stock: true },
+      });
+      if (!variant) throw new Error("Variant not found");
+      if (quantity > variant.stock) {
+        throw new Error(`STOCK_EXCEEDED:${variant.stock}`);
+      }
+    }
+
     await dbUpdateQty(itemId, quantity);
   },
 

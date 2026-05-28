@@ -5,6 +5,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { OrderService } from "@/server/services/order.service";
 import { Link } from "@/i18n/navigation";
 import { formatPrice } from "@/lib/format";
+import { orderStatusLabel } from "@/lib/order-status";
 import { BankInstructionsPanel } from "@/components/storefront/BankInstructionsPanel";
 import type { AppLocale } from "@/i18n/routing";
 
@@ -50,7 +51,7 @@ export default async function AccountOrderDetailPage({ params }: { params: Param
             #{order.orderNumber}
           </h1>
           <p className="mt-2 font-caps text-[10px] uppercase tracking-[0.22em] text-ink-mute">
-            {new Date(order.placedAt).toLocaleDateString("en-GB")} · {order.status.replaceAll("_", " ").toLowerCase()}
+            {new Date(order.placedAt).toLocaleDateString("tr-TR")} · {orderStatusLabel(order.status)}
           </p>
         </div>
         <span className="font-serif text-3xl font-medium text-ink">{formatPrice(order.total)}</span>

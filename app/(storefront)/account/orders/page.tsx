@@ -5,6 +5,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { OrderService } from "@/server/services/order.service";
 import { Link } from "@/i18n/navigation";
 import { formatPrice } from "@/lib/format";
+import { orderStatusLabel } from "@/lib/order-status";
 import type { AppLocale } from "@/i18n/routing";
 import type { OrderDTO } from "@/server/types/order";
 
@@ -60,11 +61,11 @@ export default async function AccountOrdersPage() {
               >
                 <span className="font-serif text-lg text-ink">#{o.orderNumber}</span>
                 <span className="font-serif text-base text-ink-2">
-                  {o.items.length} {o.items.length === 1 ? "piece" : "pieces"} ·{" "}
-                  {new Date(o.placedAt).toLocaleDateString("en-GB")}
+                  {o.items.length} parça ·{" "}
+                  {new Date(o.placedAt).toLocaleDateString("tr-TR")}
                 </span>
                 <span className="font-caps text-[9px] uppercase tracking-[0.22em] text-ink-mute">
-                  {o.status.replaceAll("_", " ").toLowerCase()}
+                  {orderStatusLabel(o.status)}
                 </span>
                 <span className="font-serif text-lg font-medium text-ink">
                   {formatPrice(o.total)}

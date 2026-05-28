@@ -415,6 +415,20 @@ model Address {
 // Store
 // ============================================================================
 
+// Inbound messages from the storefront /contact form. Persisted so the atelier
+// keeps a durable queue (admin UI is a separate task). isRead drives the unread
+// badge; createdAt is indexed for the default "newest first" inbox sort.
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  message   String   @db.Text
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
 model StoreSettings {
   id                    String   @id @default("singleton")
   brandName             String   @default("efruze")

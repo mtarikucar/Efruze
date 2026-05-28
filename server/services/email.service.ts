@@ -98,6 +98,34 @@ export const EmailService = {
     });
   },
 
+  /**
+   * Notify the atelier of a new storefront contact-form inquiry. Plain HTML —
+   * no react-email template needed for an internal notification. Best-effort:
+   * the inquiry is already persisted before this is called, so a send failure
+   * never loses the message.
+   */
+  async contactInquiry(args: { name: string; email: string; message: string }) {
+    const esc = (s: string) =>
+      s
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    const html = `
+      <h2>Yeni iletişim mesajı / New contact inquiry</h2>
+      <p><strong>İsim:</strong> ${esc(args.name)}</p>
+      <p><strong>E-posta:</strong> ${esc(args.email)}</p>
+      <p><strong>Mesaj:</strong></p>
+      <p style="white-space:pre-wrap">${esc(args.message)}</p>
+    `;
+    return sendOrLog({
+      to: ADMIN_TO,
+      subject: `[efruze] Yeni iletişim mesajı · ${args.name}`,
+      html,
+      tag: "contact-inquiry",
+    });
+  },
+
   async orderShipped(args: {
     order: OrderDTO;
     trackingCarrier?: string;

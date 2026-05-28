@@ -39,7 +39,9 @@
       "titleEm": "elle yapılmış,",
       "titleSuffix": "az sayıda.",
       "viewAll": "24 parçanın tümünü gör →",
-      "addToBag": "Sepete ekle"
+      "addToBag": "Sepete ekle",
+      "adding": "Ekleniyor…",
+      "added": "Eklendi ✓"
     },
     "story": {
       "eyebrow": "II — Maison",
@@ -78,6 +80,8 @@
   },
   "product": {
     "addToBag": "Sepete ekle",
+    "adding": "Ekleniyor…",
+    "added": "Eklendi ✓",
     "outOfStock": "Stokta yok",
     "qty": "Adet",
     "atelierNote": "Atölye notu",
@@ -103,7 +107,10 @@
     "noResults": "Aradığınız ölçütlerle parça bulunamadı.",
     "showing": "{count} parça gösteriliyor",
     "searchingFor": "{q} için sonuçlar",
-    "clearSearch": "Aramayı temizle"
+    "clearSearch": "Aramayı temizle",
+    "prevPage": "Önceki",
+    "nextPage": "Sonraki",
+    "pageLabel": "Sayfa {page} / {total}"
   },
   "thanks": {
     "eyebrow": "Teşekkürler",

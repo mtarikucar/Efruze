@@ -14,7 +14,7 @@ import {
 type AddressRow = AddressInput & { id: string; type: "SHIPPING" | "BILLING" };
 
 const inputCls =
-  "w-full border-0 border-b border-line bg-transparent px-1 py-3 font-serif text-base text-ink outline-none placeholder:italic placeholder:text-ink-mute focus:border-ink";
+  "w-full rounded-sm border border-line bg-paper px-3.5 py-3 font-serif text-base text-ink outline-none placeholder:italic placeholder:text-ink-mute transition focus:border-ink focus:ring-2 focus:ring-ink/15";
 
 const empty: AddressRow = {
   id: "",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
@@ -21,6 +21,8 @@ export function ProductCard({
 }) {
   const t = useTranslations("home.collection");
   const [pending, startTransition] = useTransition();
+  const [added, setAdded] = useState(false);
+  const addedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isFeature = variant === "feature";
   const aspect = isFeature ? "aspect-[5/5.4]" : "aspect-[4/5]";
@@ -95,16 +97,21 @@ export function ProductCard({
             type="button"
             disabled={pending}
             onClick={() =>
-              startTransition(() => {
-                void addToCartAction({
+              startTransition(async () => {
+                const res = await addToCartAction({
                   productId: product.id,
                   quantity: 1,
                 });
+                if (res.ok) {
+                  setAdded(true);
+                  if (addedTimer.current) clearTimeout(addedTimer.current);
+                  addedTimer.current = setTimeout(() => setAdded(false), 2000);
+                }
               })
             }
             className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-ink bg-ink px-4 py-2.5 font-caps text-[10px] uppercase tracking-[0.2em] text-bg transition hover:bg-ink-2 disabled:opacity-60"
           >
-            {pending ? "…" : t("addToBag")}
+            {pending ? t("adding") : added ? t("added") : t("addToBag")}
           </button>
         </div>
       </div>

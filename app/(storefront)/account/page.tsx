@@ -4,6 +4,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { OrderService } from "@/server/services/order.service";
 import { Link } from "@/i18n/navigation";
 import { formatPrice } from "@/lib/format";
+import { orderStatusLabel } from "@/lib/order-status";
 import type { AppLocale } from "@/i18n/routing";
 import type { OrderDTO } from "@/server/types/order";
 
@@ -61,7 +62,7 @@ export default async function AccountOverviewPage() {
                 >
                   <span className="font-serif text-lg text-ink">#{o.orderNumber}</span>
                   <span className="font-caps text-[10px] uppercase tracking-[0.22em] text-ink-mute">
-                    {new Date(o.placedAt).toLocaleDateString("en-GB")}
+                    {new Date(o.placedAt).toLocaleDateString("tr-TR")}
                   </span>
                   <StatusPill status={o.status} />
                   <span className="font-serif text-lg text-ink">{formatPrice(o.total)}</span>
@@ -79,9 +80,9 @@ function EmptyOrders() {
   return (
     <div className="rounded-sm card-elev p-12 text-center">
       <p className="m-0 font-serif italic text-lg text-ink-2">
-        No orders yet. The atelier is open —{" "}
+        Henüz siparişiniz yok. Atölye açık —{" "}
         <Link href="/shop" className="text-ink underline-offset-4 hover:underline">
-          browse the collection
+          koleksiyona göz atın
         </Link>
         .
       </p>
@@ -100,7 +101,7 @@ function StatusPill({ status }: { status: string }) {
     <span
       className={`inline-flex items-center rounded-full border px-3 py-1 font-caps text-[9px] uppercase tracking-[0.22em] ${tone}`}
     >
-      {status.replaceAll("_", " ").toLowerCase()}
+      {orderStatusLabel(status)}
     </span>
   );
 }

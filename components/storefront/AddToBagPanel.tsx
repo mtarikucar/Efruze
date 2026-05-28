@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { Minus, Plus } from "lucide-react";
 import { addToCartAction } from "@/app/(storefront)/actions";
@@ -14,6 +14,8 @@ export function AddToBagPanel({ product }: { product: ProductDetailDTO }) {
   );
   const [qty, setQty] = useState(1);
   const [pending, startTransition] = useTransition();
+  const [added, setAdded] = useState(false);
+  const addedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const showVariants = product.variants.length > 1;
   const selected = product.variants.find((v) => v.id === variantId) ?? product.variants[0];
@@ -77,12 +79,17 @@ export function AddToBagPanel({ product }: { product: ProductDetailDTO }) {
           type="button"
           disabled={pending || outOfStock}
           onClick={() =>
-            startTransition(() => {
-              void addToCartAction({
+            startTransition(async () => {
+              const res = await addToCartAction({
                 productId: product.id,
                 variantId,
                 quantity: qty,
               });
+              if (res.ok) {
+                setAdded(true);
+                if (addedTimer.current) clearTimeout(addedTimer.current);
+                addedTimer.current = setTimeout(() => setAdded(false), 2000);
+              }
             })
           }
           className={cn(
@@ -92,7 +99,13 @@ export function AddToBagPanel({ product }: { product: ProductDetailDTO }) {
               : "border border-ink bg-ink text-bg hover:bg-ink-2 disabled:opacity-60",
           )}
         >
-          {outOfStock ? t("outOfStock") : pending ? "…" : t("addToBag")}
+          {outOfStock
+            ? t("outOfStock")
+            : pending
+              ? t("adding")
+              : added
+                ? t("added")
+                : t("addToBag")}
         </button>
       </div>
     </div>

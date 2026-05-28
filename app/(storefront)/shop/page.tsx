@@ -32,7 +32,7 @@ export default async function ShopPage({ searchParams }: { searchParams: SearchP
   const page = sp.page ? Math.max(1, Number.parseInt(sp.page, 10) || 1) : 1;
   const sort = (sp.sort as "newest" | "priceAsc" | "priceDesc" | undefined) ?? "newest";
 
-  const [{ items, total }, categoriesTree] = await Promise.all([
+  const [{ items, total, page: currentPage, perPage }, categoriesTree] = await Promise.all([
     safeListProducts({
       category: sp.category,
       q: sp.q,
@@ -48,6 +48,30 @@ export default async function ShopPage({ searchParams }: { searchParams: SearchP
   ]);
 
   const categories = categoriesTree.map((c) => ({ id: c.id, slug: c.slug, name: c.name }));
+
+  const totalPages = Math.max(1, Math.ceil(total / perPage));
+
+  // Build a /shop?... href that preserves every active filter/sort param and
+  // only swaps the target page. Strings are cast for typed-routes (matches the
+  // pattern used by ShopFilters).
+  const pageHref = (target: number): string => {
+    const params = new URLSearchParams();
+    if (sp.category) params.set("category", sp.category);
+    if (sp.q) params.set("q", sp.q);
+    if (sp.priceMin) params.set("priceMin", sp.priceMin);
+    if (sp.priceMax) params.set("priceMax", sp.priceMax);
+    if (sp.inStock) params.set("inStock", sp.inStock);
+    if (sp.sort) params.set("sort", sp.sort);
+    if (target > 1) params.set("page", String(target));
+    const qs = params.toString();
+    return qs ? `/shop?${qs}` : "/shop";
+  };
+
+  // Compact window of page numbers around the current page (max ~5 visible).
+  const pageNumbers: number[] = [];
+  const windowStart = Math.max(1, currentPage - 2);
+  const windowEnd = Math.min(totalPages, currentPage + 2);
+  for (let n = windowStart; n <= windowEnd; n++) pageNumbers.push(n);
 
   return (
     <section
@@ -96,10 +120,62 @@ export default async function ShopPage({ searchParams }: { searchParams: SearchP
         {items.length === 0 ? (
           <p className="font-serif text-lg text-ink-2">{t("noResults")}</p>
         ) : (
-          <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-3">
-            {items.map((p) => (
-              <ProductCard key={p.id} product={p} variant="standard" />
-            ))}
+          <div className="flex flex-col gap-12">
+            <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-3">
+              {items.map((p) => (
+                <ProductCard key={p.id} product={p} variant="standard" />
+              ))}
+            </div>
+
+            {totalPages > 1 && (
+              <nav
+                aria-label={t("pageLabel", { page: currentPage, total: totalPages })}
+                className="flex flex-wrap items-center justify-center gap-2 border-t border-line pt-10"
+              >
+                {currentPage > 1 ? (
+                  <Link
+                    href={pageHref(currentPage - 1) as never}
+                    rel="prev"
+                    className="inline-flex items-center rounded-full border border-line px-4 py-2.5 font-caps text-[10px] uppercase tracking-[0.22em] text-ink transition hover:border-ink"
+                  >
+                    {t("prevPage")}
+                  </Link>
+                ) : (
+                  <span className="inline-flex cursor-not-allowed items-center rounded-full border border-line px-4 py-2.5 font-caps text-[10px] uppercase tracking-[0.22em] text-ink-mute opacity-50">
+                    {t("prevPage")}
+                  </span>
+                )}
+
+                {pageNumbers.map((n) => (
+                  <Link
+                    key={n}
+                    href={pageHref(n) as never}
+                    aria-current={n === currentPage ? "page" : undefined}
+                    className={
+                      n === currentPage
+                        ? "inline-flex min-w-[2.5rem] items-center justify-center rounded-full border border-ink bg-ink px-3.5 py-2.5 font-caps text-[10px] uppercase tracking-[0.22em] text-bg"
+                        : "inline-flex min-w-[2.5rem] items-center justify-center rounded-full border border-line px-3.5 py-2.5 font-caps text-[10px] uppercase tracking-[0.22em] text-ink transition hover:border-ink"
+                    }
+                  >
+                    {n}
+                  </Link>
+                ))}
+
+                {currentPage < totalPages ? (
+                  <Link
+                    href={pageHref(currentPage + 1) as never}
+                    rel="next"
+                    className="inline-flex items-center rounded-full border border-line px-4 py-2.5 font-caps text-[10px] uppercase tracking-[0.22em] text-ink transition hover:border-ink"
+                  >
+                    {t("nextPage")}
+                  </Link>
+                ) : (
+                  <span className="inline-flex cursor-not-allowed items-center rounded-full border border-line px-4 py-2.5 font-caps text-[10px] uppercase tracking-[0.22em] text-ink-mute opacity-50">
+                    {t("nextPage")}
+                  </span>
+                )}
+              </nav>
+            )}
           </div>
         )}
       </div>
