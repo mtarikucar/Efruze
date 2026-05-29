@@ -32,12 +32,16 @@ export type CatalogCategory = {
   parentName: string | null;
   productCount: number;
   products: CatalogProduct[];
+  /** false for the synthetic "deleted category" catch-all group — it has no
+   * real category row, so no edit/add affordances. */
+  manageable?: boolean;
 };
 
 /**
  * The merged catalog: categories as collapsible groups, each holding its own
  * products. This is the logical union of the old products + categories lists —
  * the admin manages the whole catalog tree from one mobile-first screen.
+ * Groups with products start expanded so nothing is hidden behind a tap.
  */
 export function CatalogTree({
   categories,
@@ -47,9 +51,13 @@ export function CatalogTree({
   defaultExpandedId?: string;
 }) {
   const router = useRouter();
-  const [open, setOpen] = useState<Set<string>>(
-    () => new Set(defaultExpandedId ? [defaultExpandedId] : []),
-  );
+  const [open, setOpen] = useState<Set<string>>(() => {
+    const s = new Set<string>(
+      categories.filter((c) => c.productCount > 0).map((c) => c.id),
+    );
+    if (defaultExpandedId) s.add(defaultExpandedId);
+    return s;
+  });
 
   // Jump to the pre-expanded category (e.g. arriving from a "N ürün" link).
   useEffect(() => {
@@ -67,12 +75,31 @@ export function CatalogTree({
     });
   }
 
+  const allOpen =
+    categories.length > 0 && categories.every((c) => open.has(c.id));
+
+  function toggleAll() {
+    setOpen(allOpen ? new Set() : new Set(categories.map((c) => c.id)));
+  }
+
   const parents = categories
-    .filter((c) => !c.parentId)
+    .filter((c) => !c.parentId && c.manageable !== false)
     .map((c) => ({ id: c.id, name: c.name }));
 
   return (
     <div className="flex flex-col gap-3">
+      {categories.length > 1 && (
+        <div className="-mt-2 flex justify-end">
+          <button
+            type="button"
+            onClick={toggleAll}
+            className="font-caps text-[10px] uppercase tracking-[0.22em] text-ink-mute transition hover:text-ink"
+          >
+            {allOpen ? "Tümünü kapat" : "Tümünü aç"}
+          </button>
+        </div>
+      )}
+
       {categories.length === 0 ? (
         <EmptyState
           title="Henüz kategori yok."
@@ -81,6 +108,7 @@ export function CatalogTree({
       ) : (
         categories.map((cat) => {
           const isOpen = open.has(cat.id);
+          const manageable = cat.manageable !== false;
           return (
             <section
               key={cat.id}
@@ -118,13 +146,15 @@ export function CatalogTree({
                     {cat.productCount} ürün
                   </span>
                 </button>
-                <Link
-                  href={`/admin/categories/${cat.id}`}
-                  aria-label={`${cat.name} kategorisini düzenle`}
-                  className="flex flex-none items-center border-l border-line px-4 text-ink-mute transition hover:bg-bg-deep/30 hover:text-ink"
-                >
-                  <Settings2 size={16} strokeWidth={1.5} />
-                </Link>
+                {manageable && (
+                  <Link
+                    href={`/admin/categories/${cat.id}`}
+                    aria-label={`${cat.name} kategorisini düzenle`}
+                    className="flex flex-none items-center border-l border-line px-4 text-ink-mute transition hover:bg-bg-deep/30 hover:text-ink"
+                  >
+                    <Settings2 size={16} strokeWidth={1.5} />
+                  </Link>
+                )}
               </div>
 
               {isOpen && (
@@ -189,12 +219,18 @@ export function CatalogTree({
                     </p>
                   )}
 
-                  <Link
-                    href={`/admin/products/new?category=${cat.id}`}
-                    className="inline-flex items-center justify-center gap-1.5 rounded-sm border border-dashed border-line px-4 py-3 font-caps text-[10px] uppercase tracking-[0.22em] text-blue-deep transition hover:border-ink hover:text-ink"
-                  >
-                    <Plus size={12} strokeWidth={1.5} /> Bu kategoriye ürün ekle
-                  </Link>
+                  {manageable ? (
+                    <Link
+                      href={`/admin/products/new?category=${cat.id}`}
+                      className="inline-flex items-center justify-center gap-1.5 rounded-sm border border-dashed border-line px-4 py-3 font-caps text-[10px] uppercase tracking-[0.22em] text-blue-deep transition hover:border-ink hover:text-ink"
+                    >
+                      <Plus size={12} strokeWidth={1.5} /> Bu kategoriye ürün ekle
+                    </Link>
+                  ) : (
+                    <p className="m-0 px-1 font-caps text-[9px] uppercase tracking-[0.22em] text-ink-mute">
+                      Bu ürünlerin kategorisi silinmiş — açıp yeni bir kategori seçin.
+                    </p>
+                  )}
                 </div>
               )}
             </section>
