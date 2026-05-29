@@ -13,7 +13,7 @@ export default async function EditProductPage({ params }: { params: Params }) {
   const { id } = await params;
 
   let initial: ProductFormInitial | null = null;
-  let categories: Array<{ id: string; name: string }> = [];
+  let categories: Array<{ id: string; name: string; parentId?: string | null }> = [];
 
   try {
     const [product, cats] = await Promise.all([
@@ -83,6 +83,7 @@ export default async function EditProductPage({ params }: { params: Params }) {
     categories = cats.map((c) => ({
       id: c.id,
       name: c.translations[0]?.name ?? c.slug,
+      parentId: c.parentId,
     }));
   } catch (err) {
     console.error("[admin/products/edit] load failed", err);

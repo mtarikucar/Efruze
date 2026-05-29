@@ -11,6 +11,7 @@ import {
   AdminLinkButton,
   EmptyState,
 } from "@/components/admin/primitives";
+import { CatalogTabs } from "@/components/admin/CatalogTabs";
 
 export const metadata: Metadata = { title: "Kategoriler · yönetim" };
 
@@ -32,6 +33,8 @@ export default async function AdminCategoriesPage() {
           <AdminLinkButton href="/admin/categories/new">+ Yeni kategori</AdminLinkButton>
         }
       />
+
+      <CatalogTabs />
 
       {categories.length === 0 ? (
         <EmptyState title="Henüz kategori yok." />
@@ -57,7 +60,18 @@ export default async function AdminCategoriesPage() {
                   {c.slug}
                 </Td>
                 <Td className="text-ink-2">{c.parentName ?? "—"}</Td>
-                <Td>{c.productCount}</Td>
+                <Td>
+                  {c.productCount > 0 ? (
+                    <a
+                      href={`/admin/products?category=${c.id}`}
+                      className="font-serif text-ink underline-offset-4 hover:text-blue-deep hover:underline"
+                    >
+                      {c.productCount} ürün
+                    </a>
+                  ) : (
+                    <span className="text-ink-mute">0</span>
+                  )}
+                </Td>
                 <Td className="font-caps text-[9px] uppercase tracking-[0.22em] text-ink-mute">
                   {c.isActive ? "aktif" : "pasif"}
                 </Td>

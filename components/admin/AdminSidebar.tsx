@@ -9,26 +9,29 @@ import { AdminNavLink } from "./AdminNavLink";
 import { signOutAction } from "@/app/(auth)/actions";
 import { cn } from "@/lib/cn";
 
-const NAV: ReadonlyArray<readonly [string, string]> = [
-  ["/admin", "Panel"],
-  ["/admin/orders", "Siparişler"],
-  ["/admin/bank-transfers", "Havale onayları"],
-  ["/admin/products", "Ürünler"],
-  ["/admin/categories", "Kategoriler"],
-  ["/admin/events", "Etkinlikler"],
-  ["/admin/journal", "Günce"],
-  ["/admin/faq", "SSS"],
-  ["/admin/pages", "Sayfalar"],
-  ["/admin/maison", "Maison"],
-  ["/admin/coupons", "Kuponlar"],
-  ["/admin/customers", "Müşteriler"],
-  ["/admin/banks", "Banka hesapları"],
-  ["/admin/settings", "Ayarlar"],
+type NavItem = { href: string; label: string; match?: readonly string[] };
+
+const NAV: readonly NavItem[] = [
+  { href: "/admin", label: "Panel" },
+  { href: "/admin/orders", label: "Siparişler" },
+  { href: "/admin/bank-transfers", label: "Havale onayları" },
+  // Katalog = ürünler + kategoriler birleşik. Link ürün listesine gider,
+  // kategori alt sayfalarında da aktif kalır.
+  { href: "/admin/products", label: "Katalog", match: ["/admin/categories"] },
+  { href: "/admin/events", label: "Etkinlikler" },
+  { href: "/admin/journal", label: "Günce" },
+  { href: "/admin/faq", label: "SSS" },
+  { href: "/admin/pages", label: "Sayfalar" },
+  { href: "/admin/maison", label: "Maison" },
+  { href: "/admin/coupons", label: "Kuponlar" },
+  { href: "/admin/customers", label: "Müşteriler" },
+  { href: "/admin/banks", label: "Banka hesapları" },
+  { href: "/admin/settings", label: "Ayarlar" },
 ];
 
 // Links only visible to SUPER_ADMIN — appended to NAV when the role allows.
-const SUPER_ADMIN_NAV: ReadonlyArray<readonly [string, string]> = [
-  ["/admin/users", "Yöneticiler"],
+const SUPER_ADMIN_NAV: readonly NavItem[] = [
+  { href: "/admin/users", label: "Yöneticiler" },
 ];
 
 export function AdminSidebar({
@@ -85,9 +88,9 @@ export function AdminSidebar({
         </div>
 
         <nav className="flex flex-col gap-1 lg:mt-10">
-          {nav.map(([href, label]) => (
-            <AdminNavLink key={href} href={href}>
-              {label}
+          {nav.map((item) => (
+            <AdminNavLink key={item.href} href={item.href} match={item.match}>
+              {item.label}
             </AdminNavLink>
           ))}
         </nav>

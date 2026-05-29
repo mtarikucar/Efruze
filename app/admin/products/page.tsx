@@ -11,14 +11,28 @@ import {
   AdminLinkButton,
   EmptyState,
 } from "@/components/admin/primitives";
+import { CatalogTabs } from "@/components/admin/CatalogTabs";
+import { Link } from "@/i18n/navigation";
 import { formatPrice } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Ürünler · yönetim" };
 
-export default async function AdminProductsPage() {
+type Search = Promise<{ category?: string }>;
+
+export default async function AdminProductsPage({ searchParams }: { searchParams: Search }) {
+  const { category: categoryId } = await searchParams;
+
   let products: Awaited<ReturnType<typeof load>> = [];
+  let categoryName: string | null = null;
   try {
-    products = await load();
+    products = await load(categoryId);
+    if (categoryId) {
+      const cat = await prisma.category.findUnique({
+        where: { id: categoryId },
+        include: { translations: { where: { locale: "tr" } } },
+      });
+      categoryName = cat ? (cat.translations[0]?.name ?? cat.slug) : null;
+    }
   } catch {
     products = [];
   }
@@ -36,8 +50,27 @@ export default async function AdminProductsPage() {
         }
       />
 
+      <CatalogTabs />
+
+      {categoryId && (
+        <div className="flex flex-wrap items-center gap-3 font-caps text-[10px] uppercase tracking-[0.22em] text-ink-mute">
+          <span>
+            <span className="text-ink">{categoryName ?? "Kategori"}</span> kategorisindeki ürünler
+          </span>
+          <Link
+            href="/admin/products"
+            className="text-blue-deep underline-offset-4 hover:underline"
+          >
+            filtreyi temizle
+          </Link>
+        </div>
+      )}
+
       {products.length === 0 ? (
-        <EmptyState title="Henüz ürün yok." sub="İlk parçayı eklemek için 'Yeni ürün'e tıklayın." />
+        <EmptyState
+          title={categoryId ? "Bu kategoride ürün yok." : "Henüz ürün yok."}
+          sub={categoryId ? undefined : "İlk parçayı eklemek için 'Yeni ürün'e tıklayın."}
+        />
       ) : (
         <Table>
           <THead>
@@ -82,8 +115,9 @@ export default async function AdminProductsPage() {
   );
 }
 
-async function load() {
+async function load(categoryId?: string) {
   const rows = await prisma.product.findMany({
+    where: categoryId ? { categoryId } : undefined,
     orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
     include: {
       translations: { where: { locale: "tr" } },

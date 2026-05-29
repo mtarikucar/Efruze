@@ -6,20 +6,21 @@ import { Trash2, Plus } from "lucide-react";
 import {
   AdminButton,
   FormField,
-  FormSection,
   adminInputCls,
   adminTextareaCls,
   adminCheckboxCls,
 } from "./primitives";
 import { CloudinaryImageList, type ImageItem } from "./CloudinaryImageList";
 import { CloudinaryGLBUpload, type Model3DItem } from "./CloudinaryGLBUpload";
+import { QuickCategoryField } from "./QuickCategoryField";
 import {
   createProductAction,
   updateProductAction,
   type ProductInput,
 } from "@/app/admin/products/actions";
+import { cn } from "@/lib/cn";
 
-type CategoryOption = { id: string; name: string };
+type CategoryOption = { id: string; name: string; parentId?: string | null };
 type ImageRow = ImageItem;
 type VariantRow = {
   id?: string;
@@ -72,6 +73,16 @@ const emptyInitial: ProductFormInitial = {
   model3d: null,
 };
 
+type Tab = "katalog" | "icerik" | "varyantlar" | "gorseller" | "model3d" | "seo";
+const TABS: Array<{ id: Tab; label: string }> = [
+  { id: "katalog", label: "Katalog" },
+  { id: "icerik", label: "İçerik" },
+  { id: "varyantlar", label: "Varyantlar" },
+  { id: "gorseller", label: "Görseller" },
+  { id: "model3d", label: "3D model" },
+  { id: "seo", label: "SEO" },
+];
+
 export function ProductForm({
   initial,
   categories,
@@ -82,6 +93,8 @@ export function ProductForm({
   const router = useRouter();
   const data = initial ?? emptyInitial;
   const [form, setForm] = useState<ProductFormInitial>(data);
+  const [cats, setCats] = useState<CategoryOption[]>(categories);
+  const [tab, setTab] = useState<Tab>("katalog");
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -126,8 +139,17 @@ export function ProductForm({
     setForm({ ...form, variants: next });
   }
 
+  // Root categories — used both for the inline "new category" parent picker
+  // and as the top level of the grouped <select>.
+  const parentOptions = cats.filter((c) => !c.parentId);
+
   async function submit() {
     setError(null);
+    if (!form.categoryId) {
+      setTab("katalog");
+      setError("Lütfen bir kategori seçin.");
+      return;
+    }
     const payload: ProductInput & { id?: string } = {
       slug: form.slug,
       sku: form.sku,
@@ -149,7 +171,11 @@ export function ProductForm({
         priceOverride: v.priceOverride || "",
         isDefault: v.isDefault,
       })),
-      images: form.images.map((i) => ({ url: i.url, alt: i.alt ?? "" })),
+      images: form.images.map((i) => ({
+        url: i.url,
+        alt: i.alt ?? "",
+        ...(i.publicId ? { publicId: i.publicId } : {}),
+      })),
       model3d: form.model3d,
     };
 
@@ -173,103 +199,148 @@ export function ProductForm({
       }}
       className="flex flex-col gap-6"
     >
-      <FormSection title="Katalog">
-        <FormField label="SKU">
-          <input
-            required
-            value={form.sku}
-            onChange={(e) => set("sku", e.target.value)}
-            className={adminInputCls}
-          />
-        </FormField>
-        <FormField label="Slug (boş = isimden üretilir)">
-          <input
-            value={form.slug}
-            onChange={(e) => set("slug", e.target.value)}
-            className={adminInputCls}
-            placeholder="firuze-ipek-esarp"
-          />
-        </FormField>
-        <FormField label="Kategori">
-          <select
-            required
-            value={form.categoryId}
-            onChange={(e) => set("categoryId", e.target.value)}
-            className={adminInputCls}
+      {/* Tab strip — sections stay mounted (hidden) so required validation and
+          field state survive switching tabs; one form, one submit. */}
+      <div className="flex flex-wrap gap-2 border-b border-line pb-4">
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => setTab(t.id)}
+            className={cn(
+              "rounded-full border px-4 py-2 font-caps text-[10px] uppercase tracking-[0.22em] transition",
+              tab === t.id
+                ? "border-ink bg-ink text-bg"
+                : "border-line text-ink-2 hover:border-ink hover:text-ink",
+            )}
           >
-            <option value="">— seç —</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </FormField>
-        <FormField label="Temel fiyat (TRY)">
-          <input
-            required
-            value={form.basePrice}
-            onChange={(e) => set("basePrice", e.target.value)}
-            className={adminInputCls}
-            inputMode="decimal"
-          />
-        </FormField>
-        <FormField label="Edisyon numarası" hint='"N° XXX" olarak gösterilir'>
-          <input
-            value={form.editionNumber ?? ""}
-            onChange={(e) =>
-              set("editionNumber", e.target.value ? Number(e.target.value) : null)
-            }
-            className={adminInputCls}
-            inputMode="numeric"
-          />
-        </FormField>
-        <FormField label="Edisyon toplamı" hint='Boş = açık edisyon; sayı = "1 / N"'>
-          <input
-            value={form.editionTotal ?? ""}
-            onChange={(e) =>
-              set("editionTotal", e.target.value ? Number(e.target.value) : null)
-            }
-            className={adminInputCls}
-            inputMode="numeric"
-          />
-        </FormField>
-        <FormField label="Sıralama">
-          <input
-            value={form.sortOrder}
-            onChange={(e) => set("sortOrder", Number(e.target.value) || 0)}
-            className={adminInputCls}
-            inputMode="numeric"
-          />
-        </FormField>
-        <FormField label="Bayraklar">
-          <div className="flex flex-wrap gap-5 pt-2">
-            <label className="inline-flex items-center gap-2 font-caps text-[10px] uppercase tracking-[0.22em] text-ink-2">
-              <input
-                type="checkbox"
-                checked={form.isFeatured}
-                onChange={(e) => set("isFeatured", e.target.checked)}
-                className={adminCheckboxCls}
-              />
-              Öne çıkan
-            </label>
-            <label className="inline-flex items-center gap-2 font-caps text-[10px] uppercase tracking-[0.22em] text-ink-2">
-              <input
-                type="checkbox"
-                checked={form.isPublished}
-                onChange={(e) => set("isPublished", e.target.checked)}
-                className={adminCheckboxCls}
-              />
-              Yayında
-            </label>
-          </div>
-        </FormField>
-      </FormSection>
+            {t.label}
+          </button>
+        ))}
+      </div>
 
-      <section className="rounded-sm card-elev p-6">
-        <div className="mb-5 flex items-end justify-between">
-          <h2 className="m-0 font-serif text-xl font-light text-ink">İçerik</h2>
+      {/* KATALOG */}
+      <section hidden={tab !== "katalog"} className="rounded-sm card-elev p-6">
+        <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
+          <FormField label="SKU">
+            <input
+              required
+              value={form.sku}
+              onChange={(e) => set("sku", e.target.value)}
+              className={adminInputCls}
+            />
+          </FormField>
+          <FormField label="Slug (boş = isimden üretilir)">
+            <input
+              value={form.slug}
+              onChange={(e) => set("slug", e.target.value)}
+              className={adminInputCls}
+              placeholder="firuze-ipek-esarp"
+            />
+          </FormField>
+          <FormField label="Kategori" full>
+            <select
+              required
+              value={form.categoryId}
+              onChange={(e) => set("categoryId", e.target.value)}
+              className={adminInputCls}
+            >
+              <option value="">— seç —</option>
+              {parentOptions.map((root) => {
+                const kids = cats.filter((c) => c.parentId === root.id);
+                if (kids.length === 0) {
+                  return (
+                    <option key={root.id} value={root.id}>
+                      {root.name}
+                    </option>
+                  );
+                }
+                return (
+                  <optgroup key={root.id} label={root.name}>
+                    <option value={root.id}>{root.name} (genel)</option>
+                    {kids.map((k) => (
+                      <option key={k.id} value={k.id}>
+                        {k.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                );
+              })}
+            </select>
+            <div className="mt-2">
+              <QuickCategoryField
+                parents={parentOptions.map((p) => ({ id: p.id, name: p.name }))}
+                onCreated={(cat) => {
+                  setCats((prev) => [...prev, cat]);
+                  set("categoryId", cat.id);
+                }}
+              />
+            </div>
+          </FormField>
+          <FormField label="Temel fiyat (TRY)">
+            <input
+              required
+              value={form.basePrice}
+              onChange={(e) => set("basePrice", e.target.value)}
+              className={adminInputCls}
+              inputMode="decimal"
+            />
+          </FormField>
+          <FormField label="Sıralama">
+            <input
+              value={form.sortOrder}
+              onChange={(e) => set("sortOrder", Number(e.target.value) || 0)}
+              className={adminInputCls}
+              inputMode="numeric"
+            />
+          </FormField>
+          <FormField label="Edisyon numarası" hint='"N° XXX" olarak gösterilir'>
+            <input
+              value={form.editionNumber ?? ""}
+              onChange={(e) =>
+                set("editionNumber", e.target.value ? Number(e.target.value) : null)
+              }
+              className={adminInputCls}
+              inputMode="numeric"
+            />
+          </FormField>
+          <FormField label="Edisyon toplamı" hint='Boş = açık edisyon; sayı = "1 / N"'>
+            <input
+              value={form.editionTotal ?? ""}
+              onChange={(e) =>
+                set("editionTotal", e.target.value ? Number(e.target.value) : null)
+              }
+              className={adminInputCls}
+              inputMode="numeric"
+            />
+          </FormField>
+          <FormField label="Bayraklar" full>
+            <div className="flex flex-wrap gap-5 pt-2">
+              <label className="inline-flex items-center gap-2 font-caps text-[10px] uppercase tracking-[0.22em] text-ink-2">
+                <input
+                  type="checkbox"
+                  checked={form.isFeatured}
+                  onChange={(e) => set("isFeatured", e.target.checked)}
+                  className={adminCheckboxCls}
+                />
+                Öne çıkan
+              </label>
+              <label className="inline-flex items-center gap-2 font-caps text-[10px] uppercase tracking-[0.22em] text-ink-2">
+                <input
+                  type="checkbox"
+                  checked={form.isPublished}
+                  onChange={(e) => set("isPublished", e.target.checked)}
+                  className={adminCheckboxCls}
+                />
+                Yayında
+              </label>
+            </div>
+          </FormField>
         </div>
+      </section>
+
+      {/* İÇERİK */}
+      <section hidden={tab !== "icerik"} className="rounded-sm card-elev p-6">
         <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
           <FormField label="İsim" full>
             <input
@@ -305,7 +376,8 @@ export function ProductForm({
         </div>
       </section>
 
-      <section className="rounded-sm card-elev p-6">
+      {/* VARYANTLAR */}
+      <section hidden={tab !== "varyantlar"} className="rounded-sm card-elev p-6">
         <div className="mb-5 flex items-end justify-between">
           <h2 className="m-0 font-serif text-xl font-light text-ink">Varyantlar</h2>
           <AdminButton type="button" variant="ghost" size="sm" onClick={addVariant}>
@@ -376,7 +448,8 @@ export function ProductForm({
         </div>
       </section>
 
-      <section className="rounded-sm card-elev p-6">
+      {/* GÖRSELLER */}
+      <section hidden={tab !== "gorseller"} className="rounded-sm card-elev p-6">
         <div className="mb-5 flex items-end justify-between">
           <h2 className="m-0 font-serif text-xl font-light text-ink">Görseller</h2>
           <span className="font-caps text-[10px] uppercase tracking-[0.22em] text-ink-mute">
@@ -389,7 +462,8 @@ export function ProductForm({
         />
       </section>
 
-      <section className="rounded-sm card-elev p-6">
+      {/* 3D MODEL */}
+      <section hidden={tab !== "model3d"} className="rounded-sm card-elev p-6">
         <h2 className="m-0 mb-5 font-serif text-xl font-light text-ink">3D model</h2>
         <CloudinaryGLBUpload
           value={form.model3d}
@@ -397,23 +471,26 @@ export function ProductForm({
         />
       </section>
 
-      <FormSection title="SEO">
-        <FormField label="SEO başlık" full>
-          <input
-            value={form.seoTitle}
-            onChange={(e) => set("seoTitle", e.target.value)}
-            className={adminInputCls}
-          />
-        </FormField>
-        <FormField label="SEO açıklama" full>
-          <textarea
-            rows={2}
-            value={form.seoDescription}
-            onChange={(e) => set("seoDescription", e.target.value)}
-            className={adminTextareaCls}
-          />
-        </FormField>
-      </FormSection>
+      {/* SEO */}
+      <section hidden={tab !== "seo"} className="rounded-sm card-elev p-6">
+        <div className="grid grid-cols-1 gap-x-6 gap-y-4">
+          <FormField label="SEO başlık" full>
+            <input
+              value={form.seoTitle}
+              onChange={(e) => set("seoTitle", e.target.value)}
+              className={adminInputCls}
+            />
+          </FormField>
+          <FormField label="SEO açıklama" full>
+            <textarea
+              rows={2}
+              value={form.seoDescription}
+              onChange={(e) => set("seoDescription", e.target.value)}
+              className={adminTextareaCls}
+            />
+          </FormField>
+        </div>
+      </section>
 
       {error && (
         <div className="rounded-sm border border-red-700/30 bg-red-700/5 p-4 font-serif text-base text-red-900">

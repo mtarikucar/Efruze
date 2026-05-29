@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/server/db/client";
-import { PageHeader, AdminButton } from "@/components/admin/primitives";
+import { PageHeader } from "@/components/admin/primitives";
 import { CategoryForm, type CategoryFormInitial } from "@/components/admin/CategoryForm";
-import { deleteCategoryAction } from "@/app/admin/categories/actions";
+import { DeleteCategoryButton } from "@/components/admin/DeleteCategoryButton";
 
 export const metadata: Metadata = { title: "Kategoriyi düzenle · yönetim" };
 
@@ -14,9 +14,10 @@ export default async function EditCategoryPage({ params }: { params: Params }) {
 
   let initial: CategoryFormInitial | null = null;
   let parents: Array<{ id: string; name: string }> = [];
+  let productCount = 0;
 
   try {
-    const [c, others] = await Promise.all([
+    const [c, others, count] = await Promise.all([
       prisma.category.findUnique({
         where: { id },
         include: { translations: true },
@@ -25,7 +26,9 @@ export default async function EditCategoryPage({ params }: { params: Params }) {
         where: { isActive: true, parentId: null },
         include: { translations: { where: { locale: "tr" } } },
       }),
+      prisma.product.count({ where: { categoryId: id, deletedAt: null } }),
     ]);
+    productCount = count;
     if (!c) notFound();
     const tr = c.translations.find((t) => t.locale === "tr");
     initial = {
@@ -57,14 +60,7 @@ export default async function EditCategoryPage({ params }: { params: Params }) {
         title="Kategoriyi düzenle"
         sub={initial.translations.tr.name || initial.slug}
         actions={
-          <form action={async () => {
-            "use server";
-            await deleteCategoryAction({ id: initial!.id! });
-          }}>
-            <AdminButton type="submit" variant="danger" size="md">
-              Sil
-            </AdminButton>
-          </form>
+          <DeleteCategoryButton id={initial.id!} productCount={productCount} />
         }
       />
       <CategoryForm initial={initial} parents={parents} />

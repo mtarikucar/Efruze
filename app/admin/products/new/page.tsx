@@ -6,7 +6,7 @@ import { ProductForm } from "@/components/admin/ProductForm";
 export const metadata: Metadata = { title: "Yeni ürün · yönetim" };
 
 export default async function NewProductPage() {
-  let categories: Array<{ id: string; name: string }> = [];
+  let categories: Array<{ id: string; name: string; parentId?: string | null }> = [];
   try {
     const rows = await prisma.category.findMany({
       where: { isActive: true },
@@ -16,6 +16,7 @@ export default async function NewProductPage() {
     categories = rows.map((c) => ({
       id: c.id,
       name: c.translations[0]?.name ?? c.slug,
+      parentId: c.parentId,
     }));
   } catch {
     categories = [];
