@@ -20,6 +20,7 @@ import { mockJournal } from "@/lib/mock-journal";
 import { mockFaq } from "@/lib/mock-faq";
 import { mockStaticPage } from "@/lib/mock-pages";
 import { mockMaison } from "@/lib/mock-maison";
+import { countProducts } from "@/server/db/products";
 import { productListParams } from "@/server/types/product";
 import type { AppLocale } from "@/i18n/routing";
 import type { ProductDTO, ProductDetailDTO } from "@/server/types/product";
@@ -35,6 +36,15 @@ export async function safeGetFeatured(locale: AppLocale, take = 6): Promise<Prod
     return await ProductService.getFeatured(locale, take);
   } catch {
     return mockFeatured(locale).slice(0, take);
+  }
+}
+
+/** Count of live, published products — for storefront stats ("N parça"). */
+export async function safeCountProducts(): Promise<number> {
+  try {
+    return await countProducts({ deletedAt: null });
+  } catch {
+    return mockFeatured("tr").length;
   }
 }
 

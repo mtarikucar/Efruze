@@ -1,11 +1,44 @@
 "use client";
 
+import { Fragment, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { ArrowRight } from "lucide-react";
 
-export function Hero() {
+export function Hero({
+  artisanCount,
+  pieceCount,
+}: {
+  artisanCount?: number;
+  pieceCount?: number;
+}) {
   const t = useTranslations("home");
+
+  // Meta stats are real: artisan count comes from the maison page, piece count
+  // from the published catalog. A stat is dropped when its count is 0.
+  const stats: ReactNode[] = [];
+  if (artisanCount && artisanCount > 0) {
+    stats.push(
+      <>
+        <span className="font-semibold text-ink">{artisanCount}</span>{" "}
+        {t("metaArtisans")}
+      </>,
+    );
+  }
+  if (pieceCount && pieceCount > 0) {
+    stats.push(
+      <>
+        <span className="font-semibold text-ink">{pieceCount}</span>{" "}
+        {t("metaPieces")}
+      </>,
+    );
+  }
+  stats.push(
+    <>
+      {t("metaFrom")}{" "}
+      <span className="font-semibold text-ink">{t("metaIstanbul")}</span>
+    </>,
+  );
 
   return (
     <section
@@ -59,17 +92,17 @@ export function Hero() {
       </div>
 
       <div className="flex flex-col items-center gap-2 sm:flex-row sm:gap-[18px] font-caps text-[11px] uppercase tracking-[0.22em] text-ink-2/80">
-        <div>
-          <span className="font-semibold text-ink">14</span> {t("metaArtisans")}
-        </div>
-        <span className="hidden h-[3px] w-[3px] rounded-full bg-current opacity-40 sm:block" aria-hidden="true" />
-        <div>
-          <span className="font-semibold text-ink">1 / 1</span> {t("metaPieces")}
-        </div>
-        <span className="hidden h-[3px] w-[3px] rounded-full bg-current opacity-40 sm:block" aria-hidden="true" />
-        <div>
-          {t("metaFrom")} <span className="font-semibold text-ink">{t("metaIstanbul")}</span>
-        </div>
+        {stats.map((s, i) => (
+          <Fragment key={i}>
+            {i > 0 && (
+              <span
+                className="hidden h-[3px] w-[3px] rounded-full bg-current opacity-40 sm:block"
+                aria-hidden="true"
+              />
+            )}
+            <div>{s}</div>
+          </Fragment>
+        ))}
       </div>
 
       <div

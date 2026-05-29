@@ -3,7 +3,13 @@ import { Link } from "@/i18n/navigation";
 import { ProductCard } from "./ProductCard";
 import type { ProductDTO } from "@/server/types/product";
 
-export function CollectionGrid({ products }: { products: ProductDTO[] }) {
+export function CollectionGrid({
+  products,
+  totalCount,
+}: {
+  products: ProductDTO[];
+  totalCount?: number;
+}) {
   const t = useTranslations("home.collection");
   if (products.length === 0) return null;
 
@@ -32,7 +38,7 @@ export function CollectionGrid({ products }: { products: ProductDTO[] }) {
         </h2>
         <div className="font-caps text-[11px] uppercase tracking-[0.22em]">
           <Link href="/shop" className="link-underline">
-            {t("viewAll")}
+            {t("viewAll", { count: totalCount ?? products.length })}
           </Link>
         </div>
       </header>

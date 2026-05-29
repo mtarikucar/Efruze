@@ -36,10 +36,11 @@ function toProductDTO(row: ProductRow, locale: AppLocale): ProductDTO {
 
   const basePrice = row.basePrice.toString();
 
-  // Editorial badge — derived from edition data
+  // Editorial badge — derived from edition data (real piece number, not a
+  // hardcoded "1"): "<editionNumber> of <editionTotal>".
   let badge: string | null = null;
   if (row.editionTotal != null && row.editionNumber != null) {
-    badge = `1 of ${row.editionTotal}`;
+    badge = `${row.editionNumber} of ${row.editionTotal}`;
   } else if (row.editionTotal != null) {
     badge = `Edition / ${row.editionTotal}`;
   }

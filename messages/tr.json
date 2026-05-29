@@ -38,7 +38,7 @@
       "title": "Küçük bir koleksiyon,",
       "titleEm": "elle yapılmış,",
       "titleSuffix": "az sayıda.",
-      "viewAll": "24 parçanın tümünü gör →",
+      "viewAll": "{count} parçanın tümünü gör →",
       "addToBag": "Sepete ekle",
       "adding": "Ekleniyor…",
       "added": "Eklendi ✓"
