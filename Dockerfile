@@ -75,7 +75,8 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
   CMD curl -fsS http://127.0.0.1:3000/ >/dev/null || exit 1
 
-# `prisma db push` applies the schema to an empty DB on first start, and is a
-# no-op on subsequent starts. v1 ships without versioned migrations; switch to
-# `prisma migrate deploy` once you've generated a baseline migration locally.
-CMD ["sh", "-c", "npx prisma db push --skip-generate && node node_modules/.bin/next start"]
+# Versioned migrations: `prisma migrate deploy` applies any pending migrations
+# (no-op when up to date) then starts the server. An existing db-push database
+# must be baselined once (`prisma migrate resolve --applied 0_init`) before the
+# first start, otherwise deploy would try to re-create existing tables.
+CMD ["sh", "-c", "npx prisma migrate deploy && node node_modules/.bin/next start"]
