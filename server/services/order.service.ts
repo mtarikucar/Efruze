@@ -289,6 +289,31 @@ export const OrderService = {
   },
 
   /**
+   * Manually mark an order PAID — admin escape hatch for orders stuck in
+   * PENDING (e.g. an online payment whose provider callback never arrived but
+   * the funds did land). Method-agnostic; idempotent if already PAID.
+   */
+  async markPaid(args: { orderId: string; locale: AppLocale }): Promise<OrderDTO | null> {
+    await prisma.$transaction(async (tx) => {
+      const order = await tx.order.findUniqueOrThrow({
+        where: { id: args.orderId },
+        include: { payment: true },
+      });
+      if (order.status === "PAID") return; // idempotent
+      if (order.payment) {
+        await tx.payment.update({
+          where: { id: order.payment.id },
+          data: { status: "SUCCEEDED", paidAt: new Date() },
+        });
+      }
+      await tx.order.update({ where: { id: args.orderId }, data: { status: "PAID" } });
+    });
+    const refreshed = await prisma.order.findUnique({ where: { id: args.orderId } });
+    if (!refreshed) return null;
+    return this.getByOrderNumber(refreshed.orderNumber, args.locale);
+  },
+
+  /**
    * Admin status transition: PAID → PROCESSING → SHIPPED → DELIVERED, or
    * CANCELLED at any point. Pass tracking info when transitioning to SHIPPED.
    * On CANCELLED, atomically restores variant stock (gated by stockRestored

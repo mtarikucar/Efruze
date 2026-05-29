@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Cormorant_Garamond, Tenor_Sans, DM_Sans } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
-import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 const cormorant = Cormorant_Garamond({
@@ -36,12 +35,11 @@ export const metadata: Metadata = {
     template: "%s · efruze",
   },
   description:
-    "Hand-marbled silks, ceramics, paper and glassware from a single atelier on the Bosphorus. Each piece begins as a tray of still water and a steady breath.",
+    "Alanya'daki atölyemizden elle mermerlenmiş (ebru) ipekler, seramikler, kağıt ve cam ürünler. Her parça bir tepsi durgun suda, bir nefesle başlar.",
   openGraph: {
     type: "website",
     siteName: "efruze",
     locale: "tr_TR",
-    alternateLocale: ["en_US"],
   },
 };
 
@@ -65,7 +63,6 @@ export default async function RootLayout({
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}
         </NextIntlClientProvider>
-        <Analytics />
       </body>
     </html>
   );

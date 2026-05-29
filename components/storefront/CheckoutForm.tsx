@@ -255,7 +255,12 @@ export function CheckoutForm({
 
         {globalError && (
           <div className="mt-4 rounded-sm border border-red-700/30 bg-red-700/5 p-4 font-serif text-base text-red-900">
-            {globalError}
+            {(() => {
+              // Server returns raw codes (e.g. "STOCK_EXCEEDED:firuze-esarp");
+              // map the base code to a human TR message, fall back to generic.
+              const code = globalError.split(":")[0];
+              return t.has(`errors.${code}`) ? t(`errors.${code}`) : t("errors.GENERIC");
+            })()}
           </div>
         )}
         <div className="mt-6 flex flex-col gap-3">

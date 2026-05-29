@@ -32,6 +32,11 @@ const schema = z
     CLOUDINARY_API_SECRET: z.string().optional(),
 
     RESEND_API_KEY: z.string().optional(),
+    // Sender + admin recipient for transactional email. EMAIL_FROM must be on a
+    // domain verified in Resend (the default efruze.com is a placeholder — set
+    // this to an address on a domain you control or sends will be rejected).
+    EMAIL_FROM: z.string().optional(),
+    EMAIL_ADMIN_TO: z.string().optional(),
 
     PAYTR_MERCHANT_ID: z.string().optional(),
     PAYTR_MERCHANT_KEY: z.string().optional(),

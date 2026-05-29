@@ -171,6 +171,15 @@
       "USAGE_EXHAUSTED": "Bu kodun kullanım sınırı doldu.",
       "INVALID_CODE": "Geçersiz kod.",
       "CART_EMPTY": "Sepetiniz boş."
+    },
+    "errors": {
+      "INVALID_INPUT": "Girilen bilgilerde bir hata var. Lütfen alanları kontrol edin.",
+      "CART_EMPTY": "Sepetiniz boş.",
+      "TOO_MANY_REQUESTS": "Çok fazla deneme yapıldı. Lütfen biraz sonra tekrar deneyin.",
+      "STOCK_EXCEEDED": "Üzgünüz, bazı ürünlerde yeterli stok kalmadı. Sepetinizi güncelleyip tekrar deneyin.",
+      "COUPON_USAGE_EXHAUSTED": "İndirim kodunun kullanım sınırı doldu.",
+      "ORDER_NUMBER_GENERATION_FAILED": "Sipariş oluşturulamadı, lütfen tekrar deneyin.",
+      "GENERIC": "Sipariş oluşturulamadı. Lütfen tekrar deneyin ya da bizimle iletişime geçin."
     }
   },
   "cart": {

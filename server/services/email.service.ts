@@ -8,11 +8,14 @@ import { WelcomeEmail } from "@/emails/WelcomeEmail";
 import { OrderConfirmedEmail } from "@/emails/OrderConfirmedEmail";
 import { OrderShippedEmail } from "@/emails/OrderShippedEmail";
 import { OrderRefundedEmail } from "@/emails/OrderRefundedEmail";
+import { OrderCancelledEmail } from "@/emails/OrderCancelledEmail";
 import { PasswordResetEmail } from "@/emails/PasswordResetEmail";
 import type { OrderDTO, BankTransferInstructionsDTO } from "@/server/types/order";
 
-const FROM = "efruze atelier <atelier@efruze.com>";
-const ADMIN_TO = "atelier@efruze.com"; // M4 will pull from StoreSettings
+// Configurable so the shop can send from a domain it actually controls/verifies
+// in Resend. Defaults are placeholders (efruze.com) — override via env in prod.
+const FROM = env.EMAIL_FROM || "efruze atelier <atelier@efruze.com>";
+const ADMIN_TO = env.EMAIL_ADMIN_TO || "atelier@efruze.com";
 
 function getClient(): Resend | null {
   if (!env.RESEND_API_KEY) return null;
@@ -165,6 +168,16 @@ export const EmailService = {
       subject: `efruze · siparişiniz iade edildi / refunded · #${order.orderNumber}`,
       html,
       tag: "order-refunded",
+    });
+  },
+
+  async orderCancelled(order: OrderDTO) {
+    const html = await render(OrderCancelledEmail({ order }));
+    return sendOrLog({
+      to: order.email,
+      subject: `efruze · siparişiniz iptal edildi · #${order.orderNumber}`,
+      html,
+      tag: "order-cancelled",
     });
   },
 };

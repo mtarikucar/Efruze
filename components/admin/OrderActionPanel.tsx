@@ -8,6 +8,7 @@ import {
   transitionOrderStatusAction,
   refundOrderAction,
   setAdminNoteAction,
+  markOrderPaidAction,
 } from "@/app/admin/orders/actions";
 import type { OrderStatus, PaymentMethod, PaymentStatus } from "@prisma/client";
 
@@ -48,6 +49,9 @@ export function OrderActionPanel({
 
   const canConfirmBank =
     paymentMethod === "BANK_TRANSFER" && paymentStatus !== "SUCCEEDED";
+  // Escape hatch for a non-bank order stuck in PENDING (e.g. an online payment
+  // whose provider callback never landed). Bank transfers use "Havaleyi onayla".
+  const canMarkPaid = status === "PENDING" && paymentMethod !== "BANK_TRANSFER";
   const canProcess = status === "PAID";
   const canShip = status === "PAID" || status === "PROCESSING";
   const canDeliver = status === "SHIPPED";
@@ -67,6 +71,16 @@ export function OrderActionPanel({
             onClick={() => go(() => confirmBankTransferAction({ orderId }))}
           >
             Havaleyi onayla → Ödendi
+          </AdminButton>
+        )}
+
+        {canMarkPaid && (
+          <AdminButton
+            type="button"
+            disabled={pending}
+            onClick={() => go(() => markOrderPaidAction({ orderId }))}
+          >
+            Ödendi olarak işaretle
           </AdminButton>
         )}
 
@@ -97,8 +111,9 @@ export function OrderActionPanel({
             variant="danger"
             disabled={pending}
             onClick={() =>
-              confirm("Bu sipariş iptal edilsin mi?") &&
-              go(() => transitionOrderStatusAction({ orderId, next: "CANCELLED" }))
+              confirm(
+                "Bu sipariş iptal edilsin mi? Stok geri eklenir ve müşteriye iptal e-postası gönderilir.",
+              ) && go(() => transitionOrderStatusAction({ orderId, next: "CANCELLED" }))
             }
           >
             Siparişi iptal et

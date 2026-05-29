@@ -11,16 +11,30 @@ import { formatPrice } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Katalog · yönetim" };
 
-type Search = Promise<{ category?: string }>;
+type Search = Promise<{ category?: string; lowstock?: string }>;
+
+const LOW_STOCK_THRESHOLD = 3;
 
 export default async function AdminCatalogPage({ searchParams }: { searchParams: Search }) {
-  const { category } = await searchParams;
+  const { category, lowstock } = await searchParams;
+  const lowStockOnly = lowstock === "1";
 
   let categories: CatalogCategory[] = [];
   try {
     categories = await load();
   } catch {
     categories = [];
+  }
+
+  // Low-stock work list: keep only products at/under the threshold, drop the
+  // categories that then hold nothing.
+  if (lowStockOnly) {
+    categories = categories
+      .map((c) => {
+        const products = c.products.filter((p) => p.stock <= LOW_STOCK_THRESHOLD);
+        return { ...c, products, productCount: products.length };
+      })
+      .filter((c) => c.products.length > 0);
   }
 
   const totalProducts = categories.reduce((acc, c) => acc + c.productCount, 0);
@@ -40,7 +54,27 @@ export default async function AdminCatalogPage({ searchParams }: { searchParams:
 
       <CatalogTabs />
 
-      <CatalogTree categories={categories} defaultExpandedId={category} />
+      {lowStockOnly && (
+        <div className="flex flex-wrap items-center gap-3 font-caps text-[10px] uppercase tracking-[0.22em] text-ink-mute">
+          <span>
+            <span className="text-gold">Stoğu ≤ {LOW_STOCK_THRESHOLD}</span> olan ürünler
+          </span>
+          <a
+            href="/admin/products"
+            className="text-blue-deep underline-offset-4 hover:underline"
+          >
+            filtreyi temizle
+          </a>
+        </div>
+      )}
+
+      {lowStockOnly && categories.length === 0 ? (
+        <div className="rounded-sm border border-dashed border-line bg-paper p-12 text-center font-serif text-lg text-ink-2">
+          Stoğu azalan ürün yok. 👍
+        </div>
+      ) : (
+        <CatalogTree categories={categories} defaultExpandedId={category} />
+      )}
     </div>
   );
 }

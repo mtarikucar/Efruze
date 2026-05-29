@@ -65,10 +65,32 @@ export async function transitionOrderStatusAction(raw: unknown) {
         trackingNumber: parsed.data.trackingNumber || undefined,
       }).catch(() => undefined);
     }
+    if (dto && parsed.data.next === "CANCELLED") {
+      await EmailService.orderCancelled(dto).catch(() => undefined);
+    }
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "FAILED" } as const;
   }
   revalidatePath("/admin/orders");
+  revalidatePath("/admin/bank-transfers");
+  return { ok: true } as const;
+}
+
+export async function markOrderPaidAction(raw: unknown) {
+  await requireAdmin();
+  const parsed = idSchema.safeParse(raw);
+  if (!parsed.success) return { ok: false, error: "INVALID_INPUT" } as const;
+  try {
+    const locale = (await getLocale()) as AppLocale;
+    const dto = await OrderService.markPaid({ orderId: parsed.data.orderId, locale });
+    if (dto) {
+      await EmailService.orderConfirmed(dto).catch(() => undefined);
+    }
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "FAILED" } as const;
+  }
+  revalidatePath("/admin/orders");
+  revalidatePath("/admin");
   return { ok: true } as const;
 }
 

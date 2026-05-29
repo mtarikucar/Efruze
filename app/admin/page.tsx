@@ -198,12 +198,14 @@ export default async function AdminDashboardPage() {
           accent="gold"
           sub={stats.awaitingPayment > 0 ? "Havale onaylarından onayla" : undefined}
         />
-        <StatCard
-          label="Stoğu azalan ürünler"
-          value={String(stats.lowStock)}
-          accent={stats.lowStock > 0 ? "gold" : "ink"}
-          sub={stats.lowStock > 0 ? "Stokta ≤ 3" : undefined}
-        />
+        <a href="/admin/products?lowstock=1" className="block transition hover:opacity-90">
+          <StatCard
+            label="Stoğu azalan ürünler"
+            value={String(stats.lowStock)}
+            accent={stats.lowStock > 0 ? "gold" : "ink"}
+            sub={stats.lowStock > 0 ? "Stokta ≤ 3 · listeyi gör →" : "Tümü stokta"}
+          />
+        </a>
       </section>
 
       {/* ---- 30-day analytics ------------------------------------------- */}

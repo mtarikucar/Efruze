@@ -20,12 +20,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified: new Date(),
     changeFrequency: p.changeFrequency,
     priority: p.priority,
-    alternates: {
-      languages: {
-        tr: `${base}${p.path}`,
-        en: `${base}/en${p.path === "/" ? "" : p.path}`,
-      },
-    },
   }));
 
   // Add published products + active categories — both fail-soft when DB is down.

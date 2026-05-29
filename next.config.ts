@@ -9,7 +9,6 @@ const isProd = process.env.NODE_ENV === "production";
  * Content-Security-Policy directives. We allow only what the app actually uses:
  * - res.cloudinary.com — product images and GLB models
  * - ajax.googleapis.com — <model-viewer> CDN script
- * - va.vercel-scripts.com — Vercel Analytics
  * - paytr.com — PayTR payment iframe
  *
  * 'unsafe-inline' on style-src is required by Tailwind v4's CSS-in-JS layer.
@@ -35,15 +34,11 @@ function buildCsp() {
       "'unsafe-inline'",
       "'unsafe-eval'",
       "https://ajax.googleapis.com",
-      "https://va.vercel-scripts.com",
-      "https://vercel.live",
     ],
     "style-src": ["'self'", "'unsafe-inline'"],
     "font-src": ["'self'", "data:"],
     "connect-src": [
       "'self'",
-      "https://va.vercel-scripts.com",
-      "https://vitals.vercel-insights.com",
       "https://api.cloudinary.com",
     ],
     "frame-src": ["'self'", "https://www.paytr.com"],
@@ -82,6 +77,10 @@ const nextConfig: NextConfig = {
 
   images: {
     formats: ["image/avif", "image/webp"],
+    // Admin-uploaded photos live behind /uploads and can be swapped in place;
+    // a short TTL means a replaced image refreshes within a minute instead of
+    // Next 16's 4h default.
+    minimumCacheTTL: 60,
     remotePatterns: [
       { protocol: "https", hostname: "res.cloudinary.com" },
       { protocol: "https", hostname: "images.unsplash.com" },

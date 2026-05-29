@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { SignInForm } from "@/components/storefront/AuthForms";
 
-export const metadata: Metadata = { title: "Sign in · efruze" };
+export const metadata: Metadata = { title: "Giriş yap" };
 
 type SearchParams = Promise<{ callbackUrl?: string; reset?: string }>;
 
