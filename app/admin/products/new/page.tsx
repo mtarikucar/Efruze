@@ -5,7 +5,10 @@ import { ProductForm } from "@/components/admin/ProductForm";
 
 export const metadata: Metadata = { title: "Yeni ürün · yönetim" };
 
-export default async function NewProductPage() {
+type Search = Promise<{ category?: string }>;
+
+export default async function NewProductPage({ searchParams }: { searchParams: Search }) {
+  const { category } = await searchParams;
   let categories: Array<{ id: string; name: string; parentId?: string | null }> = [];
   try {
     const rows = await prisma.category.findMany({
@@ -25,7 +28,7 @@ export default async function NewProductPage() {
   return (
     <div className="flex flex-col gap-8">
       <PageHeader eyebrow="Katalog" title="Yeni ürün" />
-      <ProductForm initial={null} categories={categories} />
+      <ProductForm initial={null} categories={categories} defaultCategoryId={category} />
     </div>
   );
 }

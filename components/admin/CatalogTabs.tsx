@@ -5,13 +5,14 @@ import Link from "next/link";
 import { cn } from "@/lib/cn";
 
 const TABS: Array<{ href: string; label: string }> = [
-  { href: "/admin/products", label: "Ürünler" },
-  { href: "/admin/categories", label: "Kategoriler" },
+  { href: "/admin/products", label: "Katalog" },
+  { href: "/admin/categories", label: "Kategorileri yönet" },
 ];
 
 /**
- * Shared tab strip for the unified Katalog area. Rendered at the top of both
- * the products and categories list pages so the two feel like one section.
+ * Shared tab strip for the unified Katalog area. "Katalog" is the merged
+ * tree (categories + their products); "Kategorileri yönet" is the focused
+ * category-metadata view.
  */
 export function CatalogTabs() {
   const pathname = usePathname();

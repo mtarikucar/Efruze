@@ -86,12 +86,20 @@ const TABS: Array<{ id: Tab; label: string }> = [
 export function ProductForm({
   initial,
   categories,
+  defaultCategoryId,
 }: {
   initial: ProductFormInitial | null;
   categories: CategoryOption[];
+  /** Preselect a category for a brand-new product (from "bu kategoriye ürün
+   * ekle"). Ignored when editing, or if the id isn't a known category. */
+  defaultCategoryId?: string;
 }) {
   const router = useRouter();
-  const data = initial ?? emptyInitial;
+  const presetCategoryId =
+    defaultCategoryId && categories.some((c) => c.id === defaultCategoryId)
+      ? defaultCategoryId
+      : "";
+  const data = initial ?? { ...emptyInitial, categoryId: presetCategoryId };
   const [form, setForm] = useState<ProductFormInitial>(data);
   const [cats, setCats] = useState<CategoryOption[]>(categories);
   const [tab, setTab] = useState<Tab>("katalog");
