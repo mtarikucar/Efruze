@@ -92,7 +92,7 @@ async function load(): Promise<CatalogCategory[]> {
         include: {
           translations: { where: { locale: "tr" } },
           images: { where: { isPrimary: true }, take: 1 },
-          variants: { select: { stock: true } },
+          variants: { select: { id: true, stock: true, isDefault: true } },
         },
       },
     },
@@ -116,7 +116,7 @@ async function load(): Promise<CatalogCategory[]> {
     include: {
       translations: { where: { locale: "tr" } },
       images: { where: { isPrimary: true }, take: 1 },
-      variants: { select: { stock: true } },
+      variants: { select: { id: true, stock: true, isDefault: true } },
     },
   });
   if (orphans.length > 0) {
@@ -142,8 +142,11 @@ function toCatalogProduct(p: {
   isFeatured: boolean;
   translations: { name: string }[];
   images: { url: string }[];
-  variants: { stock: number }[];
+  variants: { id: string; stock: number; isDefault: boolean }[];
 }): CatalogProduct {
+  // Inline stock edit only makes sense for a single variant; multi-variant
+  // products show a read-only aggregate and are edited from the product form.
+  const editableVariantId = p.variants.length === 1 ? p.variants[0].id : null;
   return {
     id: p.id,
     name: p.translations[0]?.name ?? p.slug,
@@ -152,5 +155,7 @@ function toCatalogProduct(p: {
     isFeatured: p.isFeatured,
     stock: p.variants.reduce((acc, v) => acc + v.stock, 0),
     imageUrl: p.images[0]?.url ?? null,
+    editableVariantId,
+    variantCount: p.variants.length,
   };
 }

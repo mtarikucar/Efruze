@@ -11,6 +11,7 @@ import {
   Td,
   EmptyState,
 } from "@/components/admin/primitives";
+import { OrderRowQuickAction } from "@/components/admin/OrderRowQuickAction";
 import { Link } from "@/i18n/navigation";
 import { formatPrice } from "@/lib/format";
 import { cn } from "@/lib/cn";
@@ -150,6 +151,7 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
               <Th>Ödeme</Th>
               <Th>Tarih</Th>
               <Th className="text-right">Toplam</Th>
+              <Th className="text-right">İşlem</Th>
             </THead>
             <TBody>
               {items.map((o) => (
@@ -181,6 +183,14 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
                     {o.placedAt}
                   </Td>
                   <Td className="text-right">{formatPrice(o.total)}</Td>
+                  <Td className="text-right">
+                    <OrderRowQuickAction
+                      orderId={o.id}
+                      status={o.status}
+                      paymentMethod={o.paymentMethod}
+                      paymentStatus={o.paymentStatus}
+                    />
+                  </Td>
                 </Tr>
               ))}
             </TBody>

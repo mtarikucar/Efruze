@@ -14,6 +14,7 @@ import {
   EmptyState,
   AdminLinkButton,
 } from "@/components/admin/primitives";
+import { CustomerActions } from "@/components/admin/CustomerActions";
 import { formatPrice } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Müşteri · yönetim" };
@@ -100,6 +101,8 @@ export default async function AdminCustomerDetailPage({
         </section>
 
         <section className="flex flex-col gap-8">
+          <CustomerActions userId={customer.id} email={customer.email} />
+
           <div className="rounded-sm card-elev p-6">
             <h2 className="m-0 mb-3 font-serif text-xl font-light text-ink">
               Hesap

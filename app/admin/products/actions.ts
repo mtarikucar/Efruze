@@ -312,3 +312,30 @@ export async function deleteProductAction(raw: unknown): Promise<ActionResult | 
   revalidatePath("/admin/products");
   revalidatePath("/");
 }
+
+const stockSchema = z.object({
+  variantId: z.string().min(1),
+  stock: z.coerce.number().int().min(0).max(99_999),
+});
+
+/** Inline stock edit from the catalog tree — updates one variant's stock. */
+export async function updateVariantStockAction(
+  raw: unknown,
+): Promise<{ ok: true; stock: number } | { ok: false; error: string }> {
+  await requireAdmin();
+  const parsed = stockSchema.safeParse(raw);
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "INVALID" };
+  }
+  try {
+    const v = await prisma.productVariant.update({
+      where: { id: parsed.data.variantId },
+      data: { stock: parsed.data.stock },
+    });
+    revalidatePath("/admin/products");
+    revalidatePath("/admin");
+    return { ok: true, stock: v.stock };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "FAILED" };
+  }
+}

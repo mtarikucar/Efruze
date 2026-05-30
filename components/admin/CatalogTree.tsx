@@ -12,6 +12,7 @@ import {
   ImageOff,
 } from "lucide-react";
 import { QuickCategoryField } from "./QuickCategoryField";
+import { StockQuickEdit } from "./StockQuickEdit";
 import { EmptyState } from "./primitives";
 import { cn } from "@/lib/cn";
 
@@ -23,6 +24,8 @@ export type CatalogProduct = {
   isFeatured: boolean;
   stock: number;
   imageUrl: string | null;
+  editableVariantId: string | null;
+  variantCount: number;
 };
 
 export type CatalogCategory = {
@@ -160,57 +163,70 @@ export function CatalogTree({
               {isOpen && (
                 <div className="flex flex-col gap-2 border-t border-line bg-bg-deep/20 p-3">
                   {cat.products.map((p) => (
-                    <Link
+                    <div
                       key={p.id}
-                      href={`/admin/products/${p.id}`}
                       className="flex items-center gap-3 rounded-sm border border-line bg-paper p-3 transition hover:border-ink"
                     >
-                      <span className="relative flex h-14 w-14 flex-none items-center justify-center overflow-hidden rounded-sm bg-bg-deep/40">
-                        {p.imageUrl ? (
-                          <Image
-                            src={p.imageUrl}
-                            alt={p.name}
-                            fill
-                            sizes="56px"
-                            className="object-cover"
-                          />
-                        ) : (
-                          <ImageOff
-                            size={16}
-                            strokeWidth={1.25}
-                            className="text-ink-mute"
-                          />
-                        )}
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="flex items-center gap-2">
-                          <span className="truncate font-serif text-ink">
-                            {p.name}
-                          </span>
-                          {p.isFeatured && (
-                            <Star
-                              size={12}
-                              strokeWidth={1.5}
-                              className="flex-none text-gold"
-                              aria-label="öne çıkan"
+                      <Link
+                        href={`/admin/products/${p.id}`}
+                        className="flex min-w-0 flex-1 items-center gap-3"
+                      >
+                        <span className="relative flex h-14 w-14 flex-none items-center justify-center overflow-hidden rounded-sm bg-bg-deep/40">
+                          {p.imageUrl ? (
+                            <Image
+                              src={p.imageUrl}
+                              alt={p.name}
+                              fill
+                              sizes="56px"
+                              className="object-cover"
+                            />
+                          ) : (
+                            <ImageOff
+                              size={16}
+                              strokeWidth={1.25}
+                              className="text-ink-mute"
                             />
                           )}
                         </span>
-                        <span className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 font-caps text-[9px] uppercase tracking-[0.22em]">
-                          <span
-                            className={
-                              p.isPublished ? "text-emerald-700" : "text-ink-mute"
-                            }
-                          >
-                            {p.isPublished ? "yayında" : "taslak"}
+                        <span className="min-w-0 flex-1">
+                          <span className="flex items-center gap-2">
+                            <span className="truncate font-serif text-ink">
+                              {p.name}
+                            </span>
+                            {p.isFeatured && (
+                              <Star
+                                size={12}
+                                strokeWidth={1.5}
+                                className="flex-none text-gold"
+                                aria-label="öne çıkan"
+                              />
+                            )}
                           </span>
-                          <span className={p.stock <= 3 ? "text-gold" : "text-ink-mute"}>
-                            stok {p.stock}
+                          <span className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 font-caps text-[9px] uppercase tracking-[0.22em]">
+                            <span
+                              className={
+                                p.isPublished ? "text-emerald-700" : "text-ink-mute"
+                              }
+                            >
+                              {p.isPublished ? "yayında" : "taslak"}
+                            </span>
+                            <span className="font-serif text-sm normal-case tracking-normal text-ink">
+                              {p.price}
+                            </span>
                           </span>
                         </span>
-                      </span>
-                      <span className="flex-none font-serif text-ink">{p.price}</span>
-                    </Link>
+                      </Link>
+                      {p.editableVariantId ? (
+                        <StockQuickEdit
+                          variantId={p.editableVariantId}
+                          stock={p.stock}
+                        />
+                      ) : (
+                        <span className="flex-none font-caps text-[9px] uppercase tracking-[0.18em] text-ink-mute">
+                          stok {p.stock} · {p.variantCount} varyant
+                        </span>
+                      )}
+                    </div>
                   ))}
 
                   {cat.products.length === 0 && (
